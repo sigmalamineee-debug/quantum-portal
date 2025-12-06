@@ -14,6 +14,7 @@ class UserPortal {
 
         // Persistent Chat Data
         this.chatMessages = JSON.parse(localStorage.getItem('quantum_global_chat')) || [];
+        this.chatRefreshInterval = null; // Auto-refresh timer
 
         // Music Player State
         this.currentTrackIndex = 0;
@@ -1035,6 +1036,9 @@ class UserPortal {
     }
 
     renderChatContent() {
+        // Start auto-refresh for chat
+        this.startChatAutoRefresh();
+
         // Auto-scroll to bottom logic needs to be handled after render
         setTimeout(() => {
             const chatBox = document.getElementById('chatBox');
@@ -1150,7 +1154,55 @@ class UserPortal {
 
         // Re-render chat if active
         if (this.activeTab === 'chat') {
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+            this.refreshChatDisplay();
+        }
+    }
+
+    refreshChatDisplay() {
+        // Only refresh the chat box, not the entire portal
+        const chatBox = document.getElementById('chatBox');
+        if (!chatBox) return;
+
+        const scrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
+
+        chatBox.innerHTML = this.chatMessages.length > 0 ? this.chatMessages.map(msg => `
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <div style="font-weight: bold; color: ${this.getRankColor(msg.rank)}; font-size: 14px; min-width: 80px;">
+                    [${msg.rank}] ${msg.user}:
+                </div>
+                <div style="color: var(--text-primary); font-size: 14px; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 0 8px 8px 8px;">
+                    ${msg.msg}
+                </div>
+                <div style="font-size: 10px; color: var(--text-secondary); margin-left: auto;">${msg.time}</div>
+            </div>
+        `).join('') : '<div style="text-align: center; color: var(--text-secondary); margin-top: 50px;">No messages yet. Start the conversation!</div>';
+
+        // Auto-scroll to bottom if user was already at bottom
+        if (scrolledToBottom) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+
+    startChatAutoRefresh() {
+        // Clear any existing interval
+        if (this.chatRefreshInterval) {
+            clearInterval(this.chatRefreshInterval);
+        }
+
+        // Refresh chat every 1 second
+        this.chatRefreshInterval = setInterval(() => {
+            if (this.activeTab === 'chat') {
+                // Reload messages from localStorage (in case another tab updated them)
+                this.chatMessages = JSON.parse(localStorage.getItem('quantum_global_chat')) || [];
+                this.refreshChatDisplay();
+            }
+        }, 1000);
+    }
+
+    stopChatAutoRefresh() {
+        if (this.chatRefreshInterval) {
+            clearInterval(this.chatRefreshInterval);
+            this.chatRefreshInterval = null;
         }
     }
 
