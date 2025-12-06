@@ -623,6 +623,25 @@ class UserPortal {
             return;
         }
 
+        if (keyData.expiresAt && Date.now() > keyData.expiresAt) {
+            this.showNotification('Key is expired', 'error');
+            return;
+        }
+
+        if (keyData.hwid && keyData.hwid !== this.deviceHwid) {
+            this.showNotification('This key is hwid locked', 'error');
+            return;
+        }
+
+        if (!keyData.hwid) {
+            keyData.hwid = this.deviceHwid;
+            const keyIndex = this.keys.findIndex(k => k.key === keyData.key);
+            if (keyIndex !== -1) {
+                this.keys[keyIndex] = keyData;
+                localStorage.setItem('admin_keys', JSON.stringify(this.keys));
+            }
+        }
+
         this.currentUser = {
             key: keyData.key,
             loginTime: Date.now()
@@ -653,6 +672,17 @@ class UserPortal {
             setTimeout(() => alert("You have been KICKED from the server."), 100);
             return;
         }
+
+        // Session Expiration Check
+        if (this.sessionCheckInterval) clearInterval(this.sessionCheckInterval);
+        this.sessionCheckInterval = setInterval(() => {
+            const currentKey = this.keys.find(k => k.key === this.currentUser.key);
+            if (currentKey && currentKey.expiresAt && Date.now() > currentKey.expiresAt) {
+                clearInterval(this.sessionCheckInterval);
+                this.logout();
+                alert("Your key has expired.");
+            }
+        }, 60000); // Check every minute
 
         const app = document.getElementById('app');
         const isMobile = window.innerWidth <= 768;
@@ -2012,6 +2042,7 @@ class UserPortal {
     }
 
     logout() {
+        if (this.sessionCheckInterval) clearInterval(this.sessionCheckInterval);
         localStorage.removeItem('user_auth_session');
         this.currentUser = null;
         this.renderLogin();
