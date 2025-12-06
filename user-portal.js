@@ -58,13 +58,14 @@ class UserPortal {
         this.announcement = "📢 WELCOME TO QUANTUM PORTAL V2.5! NEW FEATURES ADDED: SCRIPT GENERATOR, AI ASSISTANT, AND MORE! 🎉";
 
         // Poll Data
-        this.pollData = JSON.parse(localStorage.getItem('quantum_poll_data')) || {
-            question: "What game should we support next?",
+        // Poll Data
+        this.pollData = {
+            question: "What feature should we add next?",
             options: [
-                { id: 1, text: "Blox Fruits", votes: 120 },
-                { id: 2, text: "Da Hood", votes: 85 },
-                { id: 3, text: "Pet Simulator 99", votes: 200 },
-                { id: 4, text: "Bedwars", votes: 50 }
+                { id: 1, text: "More Games Support", votes: 150 },
+                { id: 2, text: "Cloud Scripts", votes: 89 },
+                { id: 3, text: "Mobile App", votes: 200 },
+                { id: 4, text: "Theme Creator", votes: 45 }
             ],
             userVoted: false
         };
@@ -1416,16 +1417,39 @@ class UserPortal {
                     </div>
                 `).join('')}
             </div>
-                                    <input type="checkbox" id="genInfiniteJump"> Infinite Jump
-                                </label>
-                            </div>
+        `;
+    }
+
+    renderGeneratorContent() {
+        return `
+            <h2 style="margin-bottom: 20px;">Script Generator</h2>
+            <div class="glass-card">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="margin-bottom: 15px;">Features</h3>
+                        <div class="input-group">
+                            <label>WalkSpeed</label>
+                            <input type="number" id="genWalkSpeed" class="modern-input" value="16">
                         </div>
-                        
+                        <div class="input-group">
+                            <label>JumpPower</label>
+                            <input type="number" id="genJumpPower" class="modern-input" value="50">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="genEsp"> ESP (Wallhack)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="genAimbot"> Aimbot
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="genInfiniteJump"> Infinite Jump
+                            </label>
+                        </div>
                         <button class="btn-primary" onclick="window.userPortal.generateScript()">
                             <i class="fas fa-bolt"></i> Generate Script
                         </button>
                     </div>
-                    
                     <div>
                         <h3 style="margin-bottom: 15px;">Output</h3>
                         <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
@@ -1436,6 +1460,157 @@ class UserPortal {
                 </div>
             </div>
         `;
+    }
+
+    renderMarketplaceContent() {
+        return `
+            <h2 style="margin-bottom: 20px;">Marketplace</h2>
+            <div class="theme-grid">
+                ${this.availableThemes.map(theme => `
+                    <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
+                        <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
+                            ${theme.name}
+                        </div>
+                        <div style="padding: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary);">${theme.author}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    installTheme(themeName) {
+        const theme = this.availableThemes.find(t => t.name === themeName);
+        if (theme) {
+            this.currentUser.theme = themeName;
+            this.saveUserData();
+            this.applyTheme(themeName);
+            this.showNotification(`Theme applied: ${themeName}`, 'success');
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        }
+    }
+
+    applyTheme(themeName) {
+        const theme = this.availableThemes.find(t => t.name === themeName) || this.availableThemes[0];
+        const root = document.documentElement;
+        for (const [key, value] of Object.entries(theme.colors)) {
+            root.style.setProperty(key, value);
+        }
+    }
+
+    renderProfileContent() {
+        return `
+            <h2 style="margin-bottom: 20px;">Profile Settings</h2>
+            <div class="glass-card">
+                <div class="profile-edit-header">
+                    <div class="profile-avatar-edit" onclick="document.getElementById('avatarUpload').click()">
+                        ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : '<i class="fas fa-user"></i>'}
+                    </div>
+                    <div>
+                        <h3>${this.currentUser.username}</h3>
+                        <p style="color: var(--text-secondary);">Rank: ${this.rank}</p>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" class="modern-input" value="${this.currentUser.username}" id="editUsername">
+                </div>
+                
+                <div class="input-group">
+                    <label>Profile Banner URL</label>
+                    <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <button class="btn-primary" onclick="window.userPortal.saveProfile()">Save Changes</button>
+            </div>
+        `;
+    }
+
+    saveProfile() {
+        const newUsername = document.getElementById('editUsername').value;
+        const newBanner = document.getElementById('editBanner').value;
+
+        if (newUsername) this.currentUser.username = newUsername;
+        this.currentUser.banner = newBanner;
+
+        this.saveUserData();
+        this.showNotification('Profile updated!', 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    }
+
+    handleAvatarUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.currentUser.avatar = e.target.result;
+                this.saveUserData();
+                this.showNotification('Avatar updated!', 'success');
+                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    renderSupportContent() {
+        return `
+            <h2 style="margin-bottom: 20px;">Support</h2>
+            <div class="support-widget">
+                <i class="fab fa-discord" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <h3>Need Help?</h3>
+                <p style="margin-bottom: 20px;">Join our Discord server for 24/7 support and updates.</p>
+                <button class="btn-primary" style="background: white; color: #5865F2; width: auto;" onclick="window.open('https://discord.gg/quantum', '_blank')">Join Discord</button>
+            </div>
+            
+            <div class="glass-card" style="margin-top: 20px;">
+                <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                <div id="aiChatBox" style="height: 200px; overflow-y: auto; margin: 15px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                    <div style="color: var(--text-secondary);">Quantum AI: How can I help you today?</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="aiInput" class="modern-input" placeholder="Ask about scripts, key system..." style="margin-bottom: 0;" onkeypress="if(event.key === 'Enter') window.userPortal.askAI()">
+                    <button class="btn-primary" style="width: auto;" onclick="window.userPortal.askAI()">Ask</button>
+                </div>
+            </div>
+        `;
+    }
+
+    askAI() {
+        const input = document.getElementById('aiInput');
+        const question = input.value.trim();
+        if (!question) return;
+
+        const chatBox = document.getElementById('aiChatBox');
+        chatBox.innerHTML += `<div style="margin-top: 10px; text-align: right; color: var(--text-primary);">You: ${question}</div>`;
+        input.value = '';
+
+        // Simulate AI Response
+        setTimeout(() => {
+            let answer = "I'm not sure about that yet.";
+            if (question.toLowerCase().includes('key')) answer = "Keys are generated by admins. You can buy one in our Discord.";
+            if (question.toLowerCase().includes('script')) answer = "You can find scripts in the 'My Scripts' tab or generate one in 'Script Gen'.";
+            if (question.toLowerCase().includes('hello')) answer = "Hello! I am the Quantum AI Assistant.";
+
+            chatBox.innerHTML += `<div style="margin-top: 10px; color: var(--accent-color);">Quantum AI: ${answer}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 1000);
+    }
+
+    votePoll(optionId) {
+        if (this.pollData.userVoted) {
+            this.showNotification('You have already voted!', 'warning');
+            return;
+        }
+
+        const option = this.pollData.options.find(o => o.id === optionId);
+        if (option) {
+            option.votes++;
+            this.pollData.userVoted = true;
+            localStorage.setItem('quantum_poll_data_v2', JSON.stringify(this.pollData));
+            this.showNotification('Vote recorded!', 'success');
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        }
     }
 
     generateScript() {
