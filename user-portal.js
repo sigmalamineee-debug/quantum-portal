@@ -53,6 +53,8 @@ class UserPortal {
         // Command Definitions
         this.commands = {
             '/kick': { rank: 'Moderator', desc: 'Kick a user from the server', usage: '/kick [username]' },
+            '/unkick': { rank: 'Moderator', desc: 'Unkick a user', usage: '/unkick [username]' },
+
             '/ban': { rank: 'Founder', desc: 'Permanently ban a user', usage: '/ban [username]' },
             '/unban': { rank: 'Founder', desc: 'Unban a user', usage: '/unban [username]' },
             '/mute': { rank: 'Moderator', desc: 'Mute a user for 10m', usage: '/mute [username]' },
@@ -707,7 +709,7 @@ class UserPortal {
                     </nav>
 
                     <div style="margin-top: auto;">
-                        <a href="#" class="nav-item" onclick="window.userPortal.logout()" style="color: #ef4444; margin-bottom: 10px;">
+                        <a href="javascript:void(0)" class="nav-item" onclick="window.userPortal.logout()" style="color: #ef4444; margin-bottom: 10px;">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                         ${isMobile ? `
@@ -1315,6 +1317,16 @@ class UserPortal {
             localStorage.setItem('quantum_kicked_users', JSON.stringify(kicked));
 
             this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
+
+        } else if (command === '/unkick') {
+            const target = args[0];
+            if (!target) return this.showNotification('Usage: /unkick [username]', 'error');
+
+            const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
+            const newKicked = kicked.filter(u => u !== target);
+            localStorage.setItem('quantum_kicked_users', JSON.stringify(newKicked));
+
+            this.showNotification(`Unkicked ${target}`, 'success');
 
         } else if (command === '/ban') {
             const target = args[0];
