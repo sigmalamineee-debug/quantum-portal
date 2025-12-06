@@ -4,19 +4,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum User Portal</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="keygen/user-portal.css">
+    <title>Quantum - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-panel-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
-<body>
-    <div id="particles-js"></div>
-    <div id="app">
-        <!-- Content injected by JS -->
+<body data-theme="default">
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <img src="../assets/logo.png" alt="Quantum Logo" class="logo-large pulsing">
+            <h2>Admin Access</h2>
+            <p class="subtitle">Enter password to continue</p>
+            <input type="password" id="adminPass" placeholder="Password">
+            <button id="loginBtn">Login</button>
+            <p id="loginError" class="error-text"></p>
+        </div>
     </div>
 
-    <script src="keygen/user-portal.js"></script>
+    <div class="keygen-container" id="mainPanel" style="display: none;">
+        <div class="card">
+            <img src="../assets/logo.png" alt="Quantum Logo" class="logo-large">
+            <h1>Quantum Admin</h1>
+            <p class="subtitle">Key Management System</p>
+
+            <div class="control-group">
+                <label>Key Duration</label>
+                <div class="duration-selector">
+                    <button class="duration-btn active" data-value="1D">1 Day</button>
+                    <button class="duration-btn" data-value="1W">1 Week</button>
+                    <button class="duration-btn" data-value="1M">1 Month</button>
+                    <button class="duration-btn" data-value="3M">3 Months</button>
+                    <button class="duration-btn" data-value="1Y">1 Year</button>
+                    <button class="duration-btn" data-value="LT">Lifetime</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Key Type</label>
+                <div class="type-selector">
+                    <div class="radio-option">
+                        <input type="radio" name="keyType" id="typeRaw" checked>
+                        <label for="typeRaw">Raw Key (Binds on use)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="keyType" id="typeHwid">
+                        <label for="typeHwid">Specific HWID</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-section" id="hwidSection" style="display: none;">
+                <label for="hwidInput">Target HWID:</label>
+                <input type="text" id="hwidInput" placeholder="Enter user's HWID">
+            </div>
+
+            <button class="generate-btn" id="generateBtn">Generate Key</button>
+
+            <div class="result-area" id="keyResult" style="display: none;">
+                <div class="key-display" id="generatedKey">----</div>
+                <div class="actions">
+                    <button class="action-btn" id="copyKey">Copy Key</button>
+                </div>
+                <div class="key-info">
+                    <span id="keyDurationInfo">Duration: 1 Day</span>
+                    <span id="keyTypeInfo">Type: Raw</span>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-title">Recent Keys</div>
+                <div class="history-list" id="historyList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="theme-selector">
+                <div class="theme-title">🎨 Theme</div>
+                <div class="theme-grid">
+                    <button class="theme-btn active" data-theme="default">💙 Ocean Blue</button>
+                    <button class="theme-btn" data-theme="crimson-red">❤️ Crimson Red</button>
+                    <button class="theme-btn" data-theme="royal-purple">💜 Royal Purple</button>
+                    <button class="theme-btn" data-theme="forest-green">💚 Forest Green</button>
+                </div>
+                <div class="premium-themes-title">Premium Themes ✨</div>
+                <div class="premium-grid">
+                    <button class="theme-btn" data-theme="fancy-gold">👑 Fancy Gold</button>
+                    <button class="theme-btn" data-theme="diamond">💎 Diamond</button>
+                </div>
+                <div class="premium-themes-title">Seasonal Themes 🎉</div>
+                <div class="seasonal-grid">
+
+                    <script src="../background.js"></script>
+                    <script src="../themes.js"></script>
+                    <script src="admin-keys.js"></script>
+                    <!-- <script src="script.js"></script> -->
+                    <script>
+                        // Theme Switcher
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const themeButtons = document.querySelectorAll('.theme-btn');
+                            themeButtons.forEach(btn => {
+                                btn.addEventListener('click', () => {
+                                    const theme = btn.dataset.theme;
+                                    document.body.setAttribute('data-theme', theme);
+                                    themeButtons.forEach(b => b.classList.remove('active'));
+                                    btn.classList.add('active');
+                                    localStorage.setItem('quantum-theme', theme);
+                                });
+                            });
+
+                            // Load saved theme
+                            const savedTheme = localStorage.getItem('quantum-theme') || 'default';
+                            document.body.setAttribute('data-theme', savedTheme);
+                            const activeBtn = document.querySelector(`[data-theme="${savedTheme}"]`);
+                            if (activeBtn) {
+                                themeButtons.forEach(b => b.classList.remove('active'));
+                                activeBtn.classList.add('active');
+                            }
+
+                            try {
+                                window.themeManager = new ThemeManager();
+                            } catch (e) {
+                                console.error("Theme Manager Init Error:", e);
+                            }
+                        });
+
+                        // Global Error Handler
+                        window.onerror = function (msg, url, line, col, error) {
+                            const errorText = `Error: ${msg}\nLine: ${line}:${col}`;
+                            console.error(errorText);
+
+                            if (msg.includes('Script error') || msg.includes('is not defined')) {
+                                console.log("Attempting auto-fix reload...");
+                            }
+
+                            const loginError = document.getElementById('loginError');
+                            if (loginError) loginError.textContent = "System Error: " + msg;
+
+                            return false;
+                        };
+                    </script>
 </body>
 
 </html>
