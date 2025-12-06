@@ -671,6 +671,9 @@ class UserPortal {
                     </nav>
 
                     <div style="margin-top: auto;">
+                        <a href="#" class="nav-item" onclick="window.userPortal.logout()" style="color: #ef4444; margin-bottom: 10px;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
                         ${isMobile ? `
                             <div class="mobile-companion-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; font-size: 12px;">
                                 <i class="fas fa-mobile-alt"></i> Mobile Companion Active
@@ -1731,6 +1734,46 @@ class UserPortal {
             requestAnimationFrame(animate);
         };
         animate();
+    }
+
+    createNewScript() {
+        const name = prompt("Enter script name:");
+        if (!name) return;
+        const content = prompt("Enter script content (Lua):");
+        if (!content) return;
+
+        this.scripts.push({ name, content, createdAt: Date.now() });
+        this.saveUserData();
+        this.showNotification('Script saved!', 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    }
+
+    deleteScript(index) {
+        if (confirm("Are you sure you want to delete this script?")) {
+            this.scripts.splice(index, 1);
+            this.saveUserData();
+            this.showNotification('Script deleted!', 'success');
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        }
+    }
+
+    viewScript(index) {
+        const script = this.scripts[index];
+        alert(`Script: ${script.name}\n\n${script.content}`);
+    }
+
+    copyScript(index) {
+        const script = this.scripts[index];
+        navigator.clipboard.writeText(script.content).then(() => {
+            this.showNotification('Script copied to clipboard!', 'success');
+        });
+    }
+
+    copyLoaderScript() {
+        const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
+        navigator.clipboard.writeText(loader).then(() => {
+            this.showNotification('Loader copied to clipboard!', 'success');
+        });
     }
 
     executeScript(index) {
