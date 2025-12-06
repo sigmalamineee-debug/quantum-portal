@@ -49,8 +49,24 @@ class UserPortal {
             'User': { color: '#9ca3af', icon: 'fa-user', priority: 10 }
         };
 
-        // Initialize Background
+        // Initialize Visuals
         this.initBackground();
+        this.initCursorTrails();
+
+        // Global Announcement
+        this.announcement = "📢 WELCOME TO QUANTUM PORTAL V2.5! NEW FEATURES ADDED: SCRIPT GENERATOR, AI ASSISTANT, AND MORE! 🎉";
+
+        // Poll Data
+        this.pollData = JSON.parse(localStorage.getItem('quantum_poll_data')) || {
+            question: "What game should we support next?",
+            options: [
+                { id: 1, text: "Blox Fruits", votes: 120 },
+                { id: 2, text: "Da Hood", votes: 85 },
+                { id: 3, text: "Pet Simulator 99", votes: 200 },
+                { id: 4, text: "Bedwars", votes: 50 }
+            ],
+            userVoted: false
+        };
 
         // Centralized Themes Definition
         this.availableThemes = [
@@ -424,7 +440,7 @@ class UserPortal {
             this.allUserData[key] = {
                 scripts: [],
                 theme: 'default',
-                avatar: null,
+                banner: null,
                 username: 'Quantum User',
                 rank: 'User',
                 badges: ['Early Access'],
@@ -435,6 +451,7 @@ class UserPortal {
         }
         this.currentUser.theme = this.allUserData[key].theme;
         this.currentUser.avatar = this.allUserData[key].avatar;
+        this.currentUser.banner = this.allUserData[key].banner;
         this.currentUser.username = this.allUserData[key].username;
         this.scripts = this.allUserData[key].scripts || [];
         this.rank = this.allUserData[key].rank || 'User';
@@ -450,6 +467,7 @@ class UserPortal {
                 scripts: this.scripts,
                 theme: this.currentUser.theme,
                 avatar: this.currentUser.avatar,
+                banner: this.currentUser.banner,
                 username: this.currentUser.username,
                 rank: this.rank,
                 badges: this.badges,
@@ -460,6 +478,48 @@ class UserPortal {
             localStorage.setItem('quantum_user_data_store', JSON.stringify(this.allUserData));
             localStorage.setItem('user_auth_session', JSON.stringify(this.currentUser));
         }
+    }
+
+    initCursorTrails() {
+        const trail = [];
+        const maxTrail = 20;
+
+        document.addEventListener('mousemove', (e) => {
+            trail.push({ x: e.clientX, y: e.clientY, age: 0 });
+            if (trail.length > maxTrail) trail.shift();
+        });
+
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; pointer-events: none;';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        const animate = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < trail.length; i++) {
+                const point = trail[i];
+                point.age++;
+
+                if (point.age > 50) {
+                    trail.splice(i, 1);
+                    i--;
+                    continue;
+                }
+
+                const alpha = 1 - (i / trail.length); // Fade out tail
+                const size = (i / trail.length) * 5; // Taper tail
+
+                ctx.fillStyle = `rgba(0, 255, 255, ${1 - alpha})`; // Cyan trail
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(animate);
+        };
+        animate();
     }
 
     initParticles() {
@@ -573,6 +633,11 @@ class UserPortal {
                         <h2 class="brand-title" style="font-size: 20px;">Quantum</h2>
                     </div>
                     
+                    <!-- Announcement Marquee -->
+                    <div style="background: rgba(0, 255, 255, 0.1); color: cyan; padding: 5px; font-size: 10px; margin-bottom: 20px; border-radius: 4px; border: 1px solid rgba(0, 255, 255, 0.2);">
+                        <marquee scrollamount="5">${this.announcement}</marquee>
+                    </div>
+                    
                     <nav class="portal-nav">
                         <a href="#" class="nav-item ${this.activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
                             <i class="fas fa-home"></i> Dashboard
@@ -588,6 +653,9 @@ class UserPortal {
                         </a>
                         <a href="#" class="nav-item ${this.activeTab === 'scripts' ? 'active' : ''}" data-tab="scripts">
                             <i class="fas fa-code"></i> My Scripts
+                        </a>
+                        <a href="#" class="nav-item ${this.activeTab === 'generator' ? 'active' : ''}" data-tab="generator">
+                            <i class="fas fa-magic"></i> Script Gen
                         </a>
                         <a href="#" class="nav-item ${this.activeTab === 'news' ? 'active' : ''}" data-tab="news">
                             <i class="fas fa-newspaper"></i> News
@@ -636,7 +704,9 @@ class UserPortal {
             case 'chat': return this.renderChatContent();
             case 'marketplace': return this.renderMarketplaceContent();
             case 'music': return this.renderMusicContent();
+            case 'music': return this.renderMusicContent();
             case 'scripts': return this.renderScriptsContent();
+            case 'generator': return this.renderGeneratorContent();
             case 'news': return this.renderNewsContent();
             case 'profile': return this.renderProfileContent();
             case 'support': return this.renderSupportContent();
@@ -686,6 +756,34 @@ class UserPortal {
                         <p style="font-size: 10px; color: var(--text-secondary);">${this.currentUser.xp || 0} XP</p>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(157, 0, 255, 0.1); color: #9D00FF;"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-details">
+                        <h4>Level ${this.currentUser.level || 1}</h4>
+                        <p style="font-size: 10px; color: var(--text-secondary);">${this.currentUser.xp || 0} XP</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Poll -->
+            <div class="glass-card" style="margin-top: 20px; padding: 20px;">
+                <h3 style="margin-bottom: 15px;"><i class="fas fa-poll"></i> Community Poll</h3>
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">${this.pollData.question}</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${this.pollData.options.map(opt => {
+            const totalVotes = this.pollData.options.reduce((a, b) => a + b.votes, 0);
+            const percent = totalVotes === 0 ? 0 : Math.round((opt.votes / totalVotes) * 100);
+            return `
+                            <div style="position: relative; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; cursor: pointer; overflow: hidden;" onclick="window.userPortal.votePoll(${opt.id})">
+                                <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${percent}%; background: rgba(0, 255, 255, 0.1); transition: width 0.5s;"></div>
+                                <div style="position: relative; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${opt.text}</span>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">${percent}% (${opt.votes})</span>
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
             </div>
 
             <div class="script-section" style="margin-top: 30px;">
@@ -726,6 +824,7 @@ class UserPortal {
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                 <h2 style="margin: 0;">Music</h2>
                 <div style="display: flex; align-items: center; gap: 10px;">
+                    <a href="https://soundcloud.com" target="_blank" style="color: #ff5500; text-decoration: none; font-size: 24px;"><i class="fab fa-soundcloud"></i></a>
                     <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png" alt="Spotify" style="height: 24px;">
                 </div>
             </div>
@@ -1304,337 +1403,64 @@ class UserPortal {
                     </div>
                 `).join('')}
             </div>
-        `;
-    }
-
-    renderProfileContent() {
-        const rankData = this.rankDefinitions[this.rank] || this.rankDefinitions['User'];
-        return `
-            <h2 style="margin-bottom: 20px;">Profile Settings</h2>
-            <div class="profile-edit-header">
-                <div class="profile-avatar-edit" onclick="document.getElementById('avatarUpload').click()" style="overflow: hidden;">
-                    ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : '<i class="fas fa-user-astronaut"></i>'}
-                </div>
-                <div>
-                    <h3 style="font-size: 24px; margin-bottom: 5px;">
-                        ${this.currentUser.username || 'Quantum User'}
-                        <i class="fas ${rankData.icon}" style="color: ${rankData.color}; font-size: 16px; margin-left: 5px;" title="${this.rank}"></i>
-                    </h3>
-                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                        ${this.badges.map(b => `<span class="news-badge badge-update" style="font-size: 10px;">${b}</span>`).join('')}
-                        <span class="news-badge" style="background: ${rankData.color}; color: black; font-weight: bold; font-size: 10px;">${this.rank}</span>
-                    </div>
-                    <button class="btn-primary" style="padding: 5px 15px; font-size: 12px;" onclick="window.userPortal.changeUsername()">Change Username</button>
-                </div>
-            </div>
-            
-            <div class="security-card" style="margin-bottom: 20px;">
-                <h3>Account Details</h3>
-                <div class="security-item">
-                    <span>Member Since</span>
-                    <span style="color: var(--text-secondary);">Dec 2025</span>
-                </div>
-                <div class="security-item">
-                    <span>Subscription Tier</span>
-                    <span style="color: var(--accent-color);">Premium</span>
-                </div>
-            </div>
-
-            <div class="glass-card" style="padding: 20px; margin-bottom: 20px;">
-                <h3>Redeem Code</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 10px; font-size: 14px;">Enter a special code to unlock ranks or rewards.</p>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="redeemInput" class="modern-input" placeholder="Enter code..." style="margin-bottom: 0;">
-                    <button class="btn-primary" style="width: auto;" onclick="window.userPortal.redeemCode()">Redeem</button>
-                </div>
-            </div>
-        `;
-    }
-
-    redeemCode() {
-        const input = document.getElementById('redeemInput');
-        const code = input.value.trim();
-
-        // Rank Codes
-        const rankCodes = {
-            'QUANTUM_FOUNDER_999': 'Founder',
-            'DEV_MODE_ON': 'Developer',
-            'ADMIN_POWER_UP': 'Admin',
-            'MOD_SQUAD_2025': 'Moderator',
-            'VIP_STATUS_NOW': 'VIP'
-        };
-
-        if (rankCodes[code]) {
-            const newRank = rankCodes[code];
-            this.rank = newRank;
-            this.badges.push(newRank); // Add rank as badge too
-            this.saveUserData();
-            this.showNotification(`🌟 ACCESS GRANTED: Welcome, ${newRank}.`, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        } else if (code === 'HACKER_MODE') {
-            this.setTheme('hacker');
-            this.showNotification('Hacker Mode Activated', 'success');
-        } else {
-            this.showNotification('Invalid Code', 'error');
-        }
-    }
-
-    renderSupportContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Support</h2>
-            
-            <div class="support-widget" style="margin-bottom: 30px;">
-                <i class="fab fa-discord" style="font-size: 48px; margin-bottom: 15px;"></i>
-                <h3>Join our Discord</h3>
-                <p style="margin-bottom: 20px; opacity: 0.8;">Get 24/7 support, chat with other users, and get exclusive updates.</p>
-                <a href="https://discord.gg/KjuYafU7UB" target="_blank" class="btn-primary" style="background: white; color: #5865F2; width: auto; padding: 10px 30px; text-decoration: none; display: inline-block;">Join Server</a>
-            </div>
-            
-            <div style="margin-top: 30px;">
-                <h3>Themes</h3>
-                <div class="theme-grid" style="margin-top: 15px;">
-                    <div class="theme-card ${this.currentUser.theme === 'default' ? 'active' : ''}" onclick="window.userPortal.setTheme('default')">
-                        <div class="theme-preview" style="background: #0f1115; color: white;">Default</div>
-                    </div>
-                    <div class="theme-card ${this.currentUser.theme === 'midnight' ? 'active' : ''}" onclick="window.userPortal.setTheme('midnight')">
-                        <div class="theme-preview" style="background: #1e293b; color: #94a3b8;">Midnight</div>
-                    </div>
-                    <div class="theme-card ${this.currentUser.theme === 'ocean' ? 'active' : ''}" onclick="window.userPortal.setTheme('ocean')">
-                        <div class="theme-preview" style="background: #0f172a; color: #38bdf8;">Ocean</div>
-                    </div>
-                    <div class="theme-card ${this.currentUser.theme === 'sunset' ? 'active' : ''}" onclick="window.userPortal.setTheme('sunset')">
-                        <div class="theme-preview" style="background: #2a1b1b; color: #f43f5e;">Sunset</div>
-                    </div>
-                     <div class="theme-card ${this.currentUser.theme === 'hacker' ? 'active' : ''}" onclick="window.userPortal.setTheme('hacker')">
-                        <div class="theme-preview" style="background: #000000; color: #00ff00; font-family: monospace;">Hacker</div>
-                    </div>
-                    ${this.installedThemes.map(theme => `
-                        <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.setTheme('${theme.name}')">
-                            <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--accent-color']};">${theme.name}</div>
+                                    <input type="checkbox" id="genInfiniteJump"> Infinite Jump
+                                </label>
+                            </div>
                         </div>
-                    `).join('')}
+                        
+                        <button class="btn-primary" onclick="window.userPortal.generateScript()">
+                            <i class="fas fa-bolt"></i> Generate Script
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 15px;">Output</h3>
+                        <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
+                        <button class="btn-primary" style="margin-top: 10px; background: rgba(255,255,255,0.1);" onclick="window.userPortal.copyGeneratedScript()">
+                            <i class="fas fa-copy"></i> Copy to Clipboard
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
     }
 
-    attachNavListeners(keyData) {
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.activeTab = item.dataset.tab;
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                document.getElementById('portalContent').innerHTML = this.getTabContent(this.activeTab, keyData);
+    generateScript() {
+        const ws = document.getElementById('genWalkSpeed').value || 16;
+        const jp = document.getElementById('genJumpPower').value || 50;
+        const esp = document.getElementById('genEsp').checked;
+        const aimbot = document.getElementById('genAimbot').checked;
+        const infJump = document.getElementById('genInfiniteJump').checked;
 
-                // Handle visualizer state
-                if (this.activeTab === 'music' && this.spotifyConnected) {
-                    this.startVisualizer();
-                } else {
-                    this.stopVisualizer();
-                }
-            });
+        let script = `-- Generated by Quantum Portal\n\n`;
+        script += `local plr = game.Players.LocalPlayer\n`;
+        script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
+
+        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws}\n`;
+        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp}\n`;
+
+        if (infJump) {
+            script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
+        }
+
+        if (esp) {
+            script += `\n-- Simple ESP\nfor _,p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1,0,0)\n    end\nend\n`;
+        }
+
+        if (aimbot) {
+            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _,p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
+        }
+
+        document.getElementById('genOutput').value = script;
+        this.showNotification('Script Generated!', 'success');
+    }
+
+    copyGeneratedScript() {
+        const output = document.getElementById('genOutput');
+        if (!output.value) return;
+        navigator.clipboard.writeText(output.value).then(() => {
+            this.showNotification('Copied to clipboard!', 'success');
         });
-    }
-
-    changeUsername() {
-        const newName = prompt("Enter new username:");
-        if (newName) {
-            this.currentUser.username = newName;
-            this.saveUserData();
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            this.showNotification('Username updated!', 'success');
-        }
-    }
-
-    handleAvatarUpload(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.currentUser.avatar = e.target.result;
-                this.saveUserData();
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-                this.showNotification('Avatar updated!', 'success');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    showHwid(hwid) {
-        alert(`Your HWID is:\n${hwid}`);
-    }
-
-    setTheme(theme) {
-        this.currentUser.theme = theme;
-        this.saveUserData();
-        this.applyTheme(theme);
-        if (this.activeTab === 'support') {
-            document.getElementById('portalContent').innerHTML = this.renderSupportContent();
-        }
-        this.showNotification(`Theme set to ${theme}`, 'success');
-    }
-
-    applyTheme(theme) {
-        const root = document.documentElement;
-
-        // Check installed themes first (user overrides)
-        let themeData = this.installedThemes.find(t => t.name === theme);
-
-        // If not installed, check available themes (system defaults)
-        if (!themeData) {
-            themeData = this.availableThemes.find(t => t.name === theme);
-        }
-
-        // Fallback to default
-        if (!themeData) {
-            themeData = this.availableThemes.find(t => t.name === 'default');
-        }
-
-        if (themeData && themeData.colors) {
-            for (const [key, value] of Object.entries(themeData.colors)) {
-                root.style.setProperty(key, value);
-            }
-        }
-    }
-
-    createNewScript() {
-        const name = prompt("Enter script name:");
-        if (!name) return;
-        const content = prompt("Enter script content:");
-        if (!content) return;
-
-        this.scripts.push({ name, content, date: Date.now() });
-        this.saveUserData();
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        this.showNotification('Script saved!', 'success');
-    }
-
-    deleteScript(index) {
-        if (confirm('Are you sure you want to delete this script?')) {
-            this.scripts.splice(index, 1);
-            this.saveUserData();
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            this.showNotification('Script deleted', 'success');
-        }
-    }
-
-    viewScript(index) {
-        const script = this.scripts[index];
-        alert(`Script: ${script.name}\n\n${script.content}`);
-    }
-
-    copyScript(index) {
-        const script = this.scripts[index];
-        navigator.clipboard.writeText(script.content).then(() => {
-            this.showNotification('Script copied to clipboard!', 'success');
-        });
-    }
-
-    copyLoaderScript() {
-        const loaderScript = "-- Quantum Loader\n-- Status: In Development\nprint('Quantum Loader Initialized')";
-        navigator.clipboard.writeText(loaderScript).then(() => {
-            this.showNotification('Loader script copied!', 'success');
-        });
-    }
-
-    toggleGhostMode() {
-        const app = document.getElementById('app');
-        if (app.style.display === 'none') {
-            app.style.display = 'block';
-            document.body.style.background = '';
-            document.title = 'Quantum Portal';
-        } else {
-            app.style.display = 'none';
-            document.body.style.background = '#fff';
-            document.body.innerHTML += '<div id="ghostOverlay" style="padding: 20px; font-family: Arial, sans-serif; color: #333;"><h1>Untitled Document</h1><p>Loading content...</p></div>';
-            document.title = 'Google Docs';
-        }
-    }
-
-    getThemeDownloads(themeName) {
-        const stats = JSON.parse(localStorage.getItem('quantum_theme_stats') || '{}');
-        return stats[themeName] || 1;
-    }
-
-    incrementThemeDownloads(themeName) {
-        const stats = JSON.parse(localStorage.getItem('quantum_theme_stats') || '{}');
-        stats[themeName] = (stats[themeName] || 1) + 1;
-        localStorage.setItem('quantum_theme_stats', JSON.stringify(stats));
-    }
-
-    renderMarketplaceContent() {
-        const themes = this.availableThemes;
-
-        return `
-    <h2 style="margin-bottom: 20px;">Theme Marketplace</h2>
-    <div class="glass-card" style="margin-bottom: 20px; text-align: center;">
-        <i class="fas fa-paint-brush" style="font-size: 48px; color: var(--accent-color); margin-bottom: 15px;"></i>
-        <h3>Free Themes</h3>
-        <p style="color: var(--text-secondary);">Customize your portal with these exclusive free themes.</p>
-    </div>
-    
-    <div class="script-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-        ${themes.map(theme => {
-            // Rank Visibility Logic
-            if (theme.requiredRank) {
-                if (this.rank !== 'Founder' && this.rank !== theme.requiredRank) {
-                    return ''; // Hide if not Founder and not matching rank
-                }
-            }
-
-            const isInstalled = this.installedThemes.some(t => t.name === theme.name);
-            const isPremium = theme.type === 'premium';
-            const hasAccess = ['Founder', 'Developer'].includes(this.rank);
-            const canInstall = !isPremium || hasAccess || isInstalled;
-            const downloads = this.getThemeDownloads(theme.name);
-
-            return `
-            <div class="glass-card" style="padding: 15px; position: relative; overflow: hidden; border: ${isPremium ? '1px solid ' + theme.previewColor : 'none'};">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: ${theme.previewColor};"></div>
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <h3 style="margin: 0;">${theme.name}</h3>
-                    <span style="font-size: 10px; background: ${isPremium ? theme.previewColor : 'rgba(255,255,255,0.1)'}; color: ${isPremium ? 'black' : 'white'}; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${theme.requiredRank ? theme.requiredRank.toUpperCase() : (isPremium ? 'PREMIUM' : 'Free')}</span>
-                </div>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 5px;">by ${theme.author}</p>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;"><i class="fas fa-download"></i> ${downloads}</p>
-                ${!canInstall ? `
-                     <button class="btn-primary" style="font-size: 12px; padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);" 
-                        onclick='window.userPortal.unlockTheme(${JSON.stringify(theme).replace(/'/g, "&#39;")})'>
-                        <i class="fas fa-lock"></i> Unlock
-                    </button>
-                ` : `
-                    <button class="btn-primary" style="font-size: 12px; padding: 8px; background: ${isInstalled ? 'rgba(255,255,255,0.1)' : 'var(--accent-color)'}; border: ${isInstalled ? '1px solid var(--glass-border)' : 'none'};" 
-                        onclick='window.userPortal.installTheme(${JSON.stringify(theme).replace(/'/g, "&#39;")})' ${isInstalled ? 'disabled' : ''}>
-                        ${isInstalled ? '<i class="fas fa-check"></i> Installed' : 'Install Theme'}
-                    </button>
-                `}
-            </div>
-        `}).join('')}
-    </div>
-`;
-    }
-
-    unlockTheme(theme) {
-        const code = prompt(`Enter unlock code for ${theme.name}:`);
-        if (code === theme.code) {
-            this.showNotification('Code Accepted! Unlocking...', 'success');
-            this.installTheme(theme);
-        } else {
-            this.showNotification('Invalid Code', 'error');
-        }
-    }
-
-    installTheme(theme) {
-        if (this.installedThemes.some(t => t.name === theme.name)) return;
-
-        this.showNotification(`Installing ${theme.name}...`, 'info');
-
-        setTimeout(() => {
-            this.installedThemes.push(theme);
-            this.saveUserData();
-            this.showNotification(`${theme.name} Installed! Check Support tab.`, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        }, 1000);
     }
 
     initBackground() {
