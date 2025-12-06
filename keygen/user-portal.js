@@ -1085,7 +1085,7 @@ class UserPortal {
             return;
         }
 
-        if (isStaff && msg.startsWith('@everyone')) {
+        if (isCommandUser && msg.startsWith('@everyone')) {
             this.addChatMessage(this.currentUser.username, this.rank, `<span style="color: #ff4444; font-weight: bold; background: rgba(255,0,0,0.1); padding: 2px 5px; border-radius: 4px;">@everyone</span> ${msg.replace('@everyone', '')}`);
             input.value = '';
             return;
