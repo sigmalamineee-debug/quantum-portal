@@ -62,10 +62,10 @@ class UserPortal {
         this.pollData = {
             question: "What feature should we add next?",
             options: [
-                { id: 1, text: "More Games Support", votes: 150 },
-                { id: 2, text: "Cloud Scripts", votes: 89 },
-                { id: 3, text: "Mobile App", votes: 200 },
-                { id: 4, text: "Theme Creator", votes: 45 }
+                { id: 1, text: "More Games Support", votes: 0 },
+                { id: 2, text: "Cloud Scripts", votes: 0 },
+                { id: 3, text: "Mobile App", votes: 0 },
+                { id: 4, text: "Theme Creator", votes: 0 }
             ],
             userVoted: false
         };
@@ -1466,16 +1466,26 @@ class UserPortal {
     }
 
     renderMarketplaceContent() {
+        const products = [
+            { name: "Blox Fruits God Mode", price: "Free", image: "https://via.placeholder.com/150/000000/00FF00?text=Blox+Fruits", desc: "Auto Farm, Auto Raid, ESP" },
+            { name: "Pet Sim 99 Gem Miner", price: "Free", image: "https://via.placeholder.com/150/000000/00FFFF?text=Pet+Sim+99", desc: "Millions of gems per hour" },
+            { name: "Da Hood Aimlock", price: "VIP", image: "https://via.placeholder.com/150/000000/FF0000?text=Da+Hood", desc: "Silent Aim, ESP, God Mode" },
+            { name: "Blade Ball Auto-Parry", price: "Free", image: "https://via.placeholder.com/150/000000/FFA500?text=Blade+Ball", desc: "Never miss a ball again" }
+        ];
+
         return `
             <h2 style="margin-bottom: 20px;">Marketplace</h2>
-            <div class="theme-grid">
-                ${this.availableThemes.map(theme => `
-                    <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                        <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                            ${theme.name}
+            <div class="script-grid">
+                ${products.map(p => `
+                    <div class="glass-card">
+                        <div style="height: 100px; background: #333; border-radius: 8px; margin-bottom: 10px; overflow: hidden;">
+                            <img src="${p.image}" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <div style="padding: 10px; text-align: center;">
-                            <div style="font-size: 12px; color: var(--text-secondary);">${theme.author}</div>
+                        <h3>${p.name}</h3>
+                        <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 10px;">${p.desc}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--accent-color); font-weight: bold;">${p.price}</span>
+                            <button class="btn-primary" style="width: auto; padding: 5px 15px;">Get</button>
                         </div>
                     </div>
                 `).join('')}
@@ -1526,7 +1536,23 @@ class UserPortal {
                     <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/image.jpg">
                 </div>
 
-                <button class="btn-primary" onclick="window.userPortal.saveProfile()">Save Changes</button>
+                <div style="margin-top: 20px;">
+                    <label style="display: block; margin-bottom: 10px;">Theme Selection</label>
+                    <div class="theme-grid">
+                        ${this.availableThemes.map(theme => `
+                            <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
+                                <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
+                                    ${theme.name}
+                                </div>
+                                <div style="padding: 5px; text-align: center;">
+                                    <div style="font-size: 10px; color: var(--text-secondary);">${theme.name}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
             </div>
         `;
     }
