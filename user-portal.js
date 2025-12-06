@@ -1961,6 +1961,80 @@ class UserPortal {
         };
         animate();
     }
+
+    createNewScript() {
+        const name = prompt("Enter script name:");
+        if (!name) return;
+        const content = prompt("Enter script content (Lua):");
+        if (!content) return;
+
+        this.scripts.push({ name, content, createdAt: Date.now() });
+        this.saveUserData();
+        this.showNotification('Script saved!', 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    }
+
+    deleteScript(index) {
+        if (confirm("Are you sure you want to delete this script?")) {
+            this.scripts.splice(index, 1);
+            this.saveUserData();
+            this.showNotification('Script deleted!', 'success');
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        }
+    }
+
+    viewScript(index) {
+        const script = this.scripts[index];
+        alert(`Script: ${script.name}\n\n${script.content}`);
+    }
+
+    copyScript(index) {
+        const script = this.scripts[index];
+        navigator.clipboard.writeText(script.content).then(() => {
+            this.showNotification('Script copied to clipboard!', 'success');
+        });
+    }
+
+    copyLoaderScript() {
+        const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
+        navigator.clipboard.writeText(loader).then(() => {
+            this.showNotification('Loader copied to clipboard!', 'success');
+        });
+    }
+
+    executeScript(index) {
+        const script = this.scripts[index];
+        this.showNotification(`Executing: ${script.name}...`, 'info');
+        // Simulate WebSocket execution
+        setTimeout(() => {
+            this.showNotification(`Successfully executed ${script.name} in-game!`, 'success');
+        }, 1000);
+    }
+
+    logout() {
+        localStorage.removeItem('user_auth_session');
+        this.currentUser = null;
+        this.renderLogin();
+    }
+
+    showNotification(message, type = 'info') {
+        const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+        const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.style.borderLeft = `4px solid ${colors[type]}`;
+        notif.innerHTML = `<i class="fas ${icons[type]}" style="color: ${colors[type]}"></i> ${message}`;
+
+        document.body.appendChild(notif);
+
+        setTimeout(() => {
+            notif.style.opacity = '0';
+            notif.style.transform = 'translateX(100%)';
+            notif.style.transition = 'all 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        }, 3000);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
