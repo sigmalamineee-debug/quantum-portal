@@ -634,6 +634,24 @@ class UserPortal {
     }
 
     renderPortal(keyData) {
+        // Ban Check
+        const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+        if (this.currentUser && blacklist.includes(this.currentUser.username)) {
+            this.logout();
+            setTimeout(() => alert("You have been BANNED."), 100);
+            return;
+        }
+
+        // Kick Check
+        const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
+        if (this.currentUser && kicked.includes(this.currentUser.username)) {
+            const newKicked = kicked.filter(u => u !== this.currentUser.username);
+            localStorage.setItem('quantum_kicked_users', JSON.stringify(newKicked));
+            this.logout();
+            setTimeout(() => alert("You have been KICKED from the server."), 100);
+            return;
+        }
+
         const app = document.getElementById('app');
         const isMobile = window.innerWidth <= 768;
         const rankData = this.rankDefinitions[this.rank] || this.rankDefinitions['User'];
@@ -1205,6 +1223,20 @@ class UserPortal {
     }
 
     sendChatMessage() {
+        // Ban Check
+        const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+        if (blacklist.includes(this.currentUser.username)) {
+            this.showNotification('You are banned and cannot chat.', 'error');
+            return;
+        }
+
+        // Mute Check
+        const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
+        if (muted.includes(this.currentUser.username)) {
+            this.showNotification('You are muted.', 'error');
+            return;
+        }
+
         const input = document.getElementById('chatInput');
         const msg = input.value.trim();
         if (!msg) return;
@@ -1277,27 +1309,57 @@ class UserPortal {
         } else if (command === '/kick') {
             const target = args[0];
             if (!target) return this.showNotification('Usage: /kick [username]', 'error');
+
+            const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
+            kicked.push(target);
+            localStorage.setItem('quantum_kicked_users', JSON.stringify(kicked));
+
             this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
 
         } else if (command === '/ban') {
             const target = args[0];
             if (!target) return this.showNotification('Usage: /ban [username]', 'error');
+
+            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+            if (!blacklist.includes(target)) {
+                blacklist.push(target);
+                localStorage.setItem('quantum_blacklist', JSON.stringify(blacklist));
+            }
+
             this.addChatMessage('System', 'Console', `🔨 <strong>${target}</strong> has been BANNED from the server.`);
 
         } else if (command === '/unban') {
             const target = args[0];
             if (!target) return this.showNotification('Usage: /unban [username]', 'error');
+
+            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+            const newBlacklist = blacklist.filter(u => u !== target);
+            localStorage.setItem('quantum_blacklist', JSON.stringify(newBlacklist));
+
             this.showNotification(`Unbanned ${target}`, 'success');
 
         } else if (command === '/mute') {
             const target = args[0];
             if (!target) return this.showNotification('Usage: /mute [username]', 'error');
-            this.addChatMessage('System', 'Console', `🔇 <strong>${target}</strong> has been muted for 10 minutes.`);
+
+            const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
+            if (!muted.includes(target)) {
+                muted.push(target);
+                localStorage.setItem('quantum_muted_users', JSON.stringify(muted));
+            }
+
+            this.addChatMessage('System', 'Console', `🔇 <strong>${target}</strong> has been muted.`);
 
         } else if (command === '/warn') {
             const target = args[0];
             if (!target) return this.showNotification('Usage: /warn [username]', 'error');
-            this.addChatMessage('System', 'Console', `⚠️ <strong>${target}</strong> has been warned.`);
+
+            const warnings = JSON.parse(localStorage.getItem('quantum_warnings') || '{}');
+            if (!warnings[target]) warnings[target] = 0;
+            warnings[target]++;
+            localStorage.setItem('quantum_warnings', JSON.stringify(warnings));
+
+            this.addChatMessage('System', 'Console', `⚠️ <strong>${target}</strong> has been warned. (Total: ${warnings[target]})`);
 
         } else if (command === '/announce') {
             const msg = args.join(' ');
