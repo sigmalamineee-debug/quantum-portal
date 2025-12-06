@@ -50,6 +50,19 @@ class UserPortal {
             'User': { color: '#9ca3af', icon: 'fa-user', priority: 10 }
         };
 
+        // Command Definitions
+        this.commands = {
+            '/kick': { rank: 'Moderator', desc: 'Kick a user from the server', usage: '/kick [username]' },
+            '/ban': { rank: 'Founder', desc: 'Permanently ban a user', usage: '/ban [username]' },
+            '/unban': { rank: 'Founder', desc: 'Unban a user', usage: '/unban [username]' },
+            '/mute': { rank: 'Moderator', desc: 'Mute a user for 10m', usage: '/mute [username]' },
+            '/warn': { rank: 'Moderator', desc: 'Issue a warning', usage: '/warn [username]' },
+            '/announce': { rank: 'Admin', desc: 'Send a global announcement', usage: '/announce [msg]' },
+            '/givekey': { rank: 'Developer', desc: 'Generate a new access key', usage: '/givekey' },
+            '/setrank': { rank: 'Founder', desc: 'Change a user\'s rank', usage: '/setrank [rank]' },
+            '/clear': { rank: 'Moderator', desc: 'Clear the chat history', usage: '/clear' }
+        };
+
         // Initialize Visuals
         this.initBackground();
         this.initCursorTrails();
@@ -668,6 +681,11 @@ class UserPortal {
                         <a href="#" class="nav-item ${this.activeTab === 'support' ? 'active' : ''}" data-tab="support">
                             <i class="fas fa-headset"></i> Support
                         </a>
+                        ${(this.rankDefinitions[this.rank]?.priority >= 70) ? `
+                            <a href="#" class="nav-item ${this.activeTab === 'commands' ? 'active' : ''}" data-tab="commands" style="color: var(--warning);">
+                                <i class="fas fa-terminal"></i> Commands
+                            </a>
+                        ` : ''}
                     </nav>
 
                     <div style="margin-top: auto;">
@@ -727,6 +745,7 @@ class UserPortal {
             case 'news': return this.renderNewsContent();
             case 'profile': return this.renderProfileContent();
             case 'support': return this.renderSupportContent();
+            case 'commands': return this.renderCommandsContent();
             default: return this.renderDashboardContent(keyData);
         }
     }
@@ -1214,25 +1233,38 @@ class UserPortal {
     handleOwnerCommand(cmd) {
         const parts = cmd.split(' ');
         const command = parts[0];
+        const args = parts.slice(1);
 
+        // Check if command exists
+        if (!this.commands[command]) {
+            return this.showNotification('Unknown command', 'error');
+        }
+
+        // Check Permissions
+        const requiredRank = this.commands[command].rank;
+        const userPriority = this.rankDefinitions[this.rank].priority;
+        const requiredPriority = this.rankDefinitions[requiredRank].priority;
+
+        if (userPriority < requiredPriority) {
+            return this.showNotification(`Permission Denied. Requires ${requiredRank}+`, 'error');
+        }
+
+        // Execute Command
         if (command === '/givekey') {
             const newKey = 'QTM_GIFT_' + Math.random().toString(36).substr(2, 6).toUpperCase();
-
-            // Add key to admin_keys in localStorage
             this.keys.push({
                 key: newKey,
                 status: 'active',
-                expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 1 Day
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000),
                 hwid: null,
                 createdAt: Date.now()
             });
             localStorage.setItem('admin_keys', JSON.stringify(this.keys));
-
             this.addChatMessage('System', 'Bot', `🎁 <strong>GIFT KEY DROP!</strong> First to claim: <code style="user-select: all; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;">${newKey}</code>`);
-            this.showNotification('Key generated and dropped in chat!', 'success');
+            this.showNotification('Key generated!', 'success');
 
         } else if (command === '/setrank') {
-            const newRank = parts[1];
+            const newRank = args[0];
             if (newRank && this.rankDefinitions[newRank]) {
                 this.rank = newRank;
                 this.saveUserData();
@@ -1241,35 +1273,44 @@ class UserPortal {
             } else {
                 this.showNotification('Invalid Rank Name', 'error');
             }
+
         } else if (command === '/kick') {
-            const target = parts[1];
+            const target = args[0];
             if (!target) return this.showNotification('Usage: /kick [username]', 'error');
             this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
 
         } else if (command === '/ban') {
-            const target = parts[1];
+            const target = args[0];
             if (!target) return this.showNotification('Usage: /ban [username]', 'error');
             this.addChatMessage('System', 'Console', `🔨 <strong>${target}</strong> has been BANNED from the server.`);
 
-            // Add to blacklist (Local simulation)
-            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
-            if (!blacklist.includes(target)) {
-                blacklist.push(target);
-                localStorage.setItem('quantum_blacklist', JSON.stringify(blacklist));
-            }
-
         } else if (command === '/unban') {
-            const target = parts[1];
+            const target = args[0];
             if (!target) return this.showNotification('Usage: /unban [username]', 'error');
-
-            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
-            const newBlacklist = blacklist.filter(u => u !== target);
-            localStorage.setItem('quantum_blacklist', JSON.stringify(newBlacklist));
-
             this.showNotification(`Unbanned ${target}`, 'success');
 
-        } else {
-            this.showNotification('Unknown command', 'error');
+        } else if (command === '/mute') {
+            const target = args[0];
+            if (!target) return this.showNotification('Usage: /mute [username]', 'error');
+            this.addChatMessage('System', 'Console', `🔇 <strong>${target}</strong> has been muted for 10 minutes.`);
+
+        } else if (command === '/warn') {
+            const target = args[0];
+            if (!target) return this.showNotification('Usage: /warn [username]', 'error');
+            this.addChatMessage('System', 'Console', `⚠️ <strong>${target}</strong> has been warned.`);
+
+        } else if (command === '/announce') {
+            const msg = args.join(' ');
+            if (!msg) return this.showNotification('Usage: /announce [msg]', 'error');
+            this.announcement = msg;
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+            this.addChatMessage('System', 'Announcement', `📢 <strong>ANNOUNCEMENT:</strong> ${msg}`);
+
+        } else if (command === '/clear') {
+            this.chatMessages = [];
+            localStorage.setItem('quantum_global_chat', JSON.stringify([]));
+            this.refreshChatDisplay();
+            this.showNotification('Chat cleared', 'success');
         }
     }
 
@@ -1466,29 +1507,79 @@ class UserPortal {
     }
 
     renderMarketplaceContent() {
-        const products = [
-            { name: "Blox Fruits God Mode", price: "Free", image: "https://via.placeholder.com/150/000000/00FF00?text=Blox+Fruits", desc: "Auto Farm, Auto Raid, ESP" },
-            { name: "Pet Sim 99 Gem Miner", price: "Free", image: "https://via.placeholder.com/150/000000/00FFFF?text=Pet+Sim+99", desc: "Millions of gems per hour" },
-            { name: "Da Hood Aimlock", price: "VIP", image: "https://via.placeholder.com/150/000000/FF0000?text=Da+Hood", desc: "Silent Aim, ESP, God Mode" },
-            { name: "Blade Ball Auto-Parry", price: "Free", image: "https://via.placeholder.com/150/000000/FFA500?text=Blade+Ball", desc: "Never miss a ball again" }
-        ];
-
         return `
-            <h2 style="margin-bottom: 20px;">Marketplace</h2>
-            <div class="script-grid">
-                ${products.map(p => `
-                    <div class="glass-card">
-                        <div style="height: 100px; background: #333; border-radius: 8px; margin-bottom: 10px; overflow: hidden;">
-                            <img src="${p.image}" style="width: 100%; height: 100%; object-fit: cover;">
+            <h2 style="margin-bottom: 20px;">Theme Marketplace</h2>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <input type="text" id="themeCodeInput" class="modern-input" placeholder="Enter Theme Code..." style="margin-bottom: 0;">
+                <button class="btn-primary" style="width: auto;" onclick="window.userPortal.redeemThemeCode()">Redeem</button>
+            </div>
+            
+            <div class="theme-grid">
+                ${this.availableThemes.map(theme => `
+                    <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
+                        <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
+                            ${theme.name}
                         </div>
-                        <h3>${p.name}</h3>
-                        <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 10px;">${p.desc}</p>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--accent-color); font-weight: bold;">${p.price}</span>
-                            <button class="btn-primary" style="width: auto; padding: 5px 15px;">Get</button>
+                        <div style="padding: 10px; text-align: center;">
+                            <div style="font-weight: bold; font-size: 14px;">${theme.name}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">${theme.author}</div>
+                            <div style="font-size: 10px; color: var(--accent-color); margin-top: 5px;">FREE</div>
                         </div>
                     </div>
                 `).join('')}
+            </div>
+        `;
+    }
+
+    redeemThemeCode() {
+        const input = document.getElementById('themeCodeInput');
+        const code = input.value.trim().toUpperCase();
+        if (!code) return;
+
+        this.showNotification('Invalid or expired code.', 'error');
+    }
+
+    renderCommandsContent() {
+        const userPriority = this.rankDefinitions[this.rank].priority;
+
+        return `
+            <h2 style="margin-bottom: 20px;">Command Center</h2>
+            <div class="glass-card">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border);">
+                    <div style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas ${this.rankDefinitions[this.rank].icon}" style="color: ${this.rankDefinitions[this.rank].color};"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0;">${this.currentUser.username}</h3>
+                        <p style="color: var(--text-secondary); margin: 0;">Current Rank: <span style="color: ${this.rankDefinitions[this.rank].color}; font-weight: bold;">${this.rank}</span></p>
+                    </div>
+                </div>
+
+                <div style="display: grid; gap: 10px;">
+                    ${Object.entries(this.commands).map(([cmd, details]) => {
+            const requiredPriority = this.rankDefinitions[details.rank].priority;
+            const hasPermission = userPriority >= requiredPriority;
+
+            return `
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; opacity: ${hasPermission ? 1 : 0.5};">
+                                <div>
+                                    <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: ${hasPermission ? 'var(--accent-color)' : 'var(--text-secondary)'};">
+                                        ${cmd}
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">${details.desc}</div>
+                                    <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">Usage: ${details.usage}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Requires</div>
+                                    <div style="font-weight: bold; color: ${this.rankDefinitions[details.rank].color};">
+                                        ${details.rank.toUpperCase()}
+                                    </div>
+                                    ${!hasPermission ? '<div style="color: #ef4444; font-size: 10px; margin-top: 5px;"><i class="fas fa-lock"></i> LOCKED</div>' : '<div style="color: #10b981; font-size: 10px; margin-top: 5px;"><i class="fas fa-check"></i> UNLOCKED</div>'}
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
             </div>
         `;
     }
