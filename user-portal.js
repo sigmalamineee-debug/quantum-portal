@@ -49,6 +49,9 @@ class UserPortal {
             'User': { color: '#9ca3af', icon: 'fa-user', priority: 10 }
         };
 
+        // Initialize Background
+        this.initBackground();
+
         // Centralized Themes Definition
         this.availableThemes = [
             {
@@ -603,21 +606,6 @@ class UserPortal {
                                 <i class="fas fa-mobile-alt"></i> Mobile Companion Active
                             </div>
                         ` : ''}
-                        <div class="user-profile" style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 15px;">
-                            <div class="avatar" style="width: 32px; height: 32px; font-size: 14px; overflow: hidden; position: relative;">
-                                ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <div class="user-info">
-                                <h3 style="font-size: 14px;">
-                                    ${this.currentUser.username || 'User'}
-                                    <i class="fas ${rankData.icon}" style="color: ${rankData.color}; font-size: 12px; margin-left: 5px;" title="${this.rank}"></i>
-                                </h3>
-                                <span style="font-size: 10px; color: ${rankData.color};">${this.rank}</span>
-                            </div>
-                        </div>
-                        <button class="logout-btn" style="width: 100%;" onclick="window.userPortal.logout()">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
                     </div>
                 </div>
 
@@ -690,6 +678,13 @@ class UserPortal {
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);"><i class="fas fa-shield-alt"></i></div>
                     <div class="stat-details"><h4>HWID</h4><p>${keyData.hwid ? 'Linked' : 'Unlinked'}</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(157, 0, 255, 0.1); color: #9D00FF;"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-details">
+                        <h4>Level ${this.currentUser.level || 1}</h4>
+                        <p style="font-size: 10px; color: var(--text-secondary);">${this.currentUser.xp || 0} XP</p>
+                    </div>
                 </div>
             </div>
 
@@ -1096,6 +1091,7 @@ class UserPortal {
         }
 
         this.addChatMessage(this.currentUser.username || 'User', this.rank, msg);
+        this.addXP(10); // Give 10 XP per message
         input.value = '';
     }
 
@@ -1129,14 +1125,59 @@ class UserPortal {
             } else {
                 this.showNotification('Invalid Rank Name', 'error');
             }
-        } else if (command === '/clear') {
-            this.chatMessages = [];
-            localStorage.setItem('quantum_global_chat', JSON.stringify([]));
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            this.showNotification('Chat cleared', 'success');
+        } else if (command === '/kick') {
+            const target = parts[1];
+            if (!target) return this.showNotification('Usage: /kick [username]', 'error');
+            this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
+
+        } else if (command === '/ban') {
+            const target = parts[1];
+            if (!target) return this.showNotification('Usage: /ban [username]', 'error');
+            this.addChatMessage('System', 'Console', `🔨 <strong>${target}</strong> has been BANNED from the server.`);
+
+            // Add to blacklist (Local simulation)
+            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+            if (!blacklist.includes(target)) {
+                blacklist.push(target);
+                localStorage.setItem('quantum_blacklist', JSON.stringify(blacklist));
+            }
+
+        } else if (command === '/unban') {
+            const target = parts[1];
+            if (!target) return this.showNotification('Usage: /unban [username]', 'error');
+
+            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+            const newBlacklist = blacklist.filter(u => u !== target);
+            localStorage.setItem('quantum_blacklist', JSON.stringify(newBlacklist));
+
+            this.showNotification(`Unbanned ${target}`, 'success');
+
         } else {
             this.showNotification('Unknown command', 'error');
         }
+    }
+
+    addXP(amount) {
+        if (!this.currentUser.xp) this.currentUser.xp = 0;
+        if (!this.currentUser.level) this.currentUser.level = 1;
+
+        this.currentUser.xp += amount;
+
+        // Level Formula: Level = sqrt(XP / 100)
+        const newLevel = Math.floor(Math.sqrt(this.currentUser.xp / 100)) || 1;
+
+        if (newLevel > this.currentUser.level) {
+            this.currentUser.level = newLevel;
+            this.showNotification(`🎉 Level Up! You are now Level ${newLevel}`, 'success');
+            this.addChatMessage('System', 'Bot', `🎉 <strong>${this.currentUser.username}</strong> reached <strong>Level ${newLevel}</strong>!`);
+
+            // Play sound
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => { });
+        }
+
+        this.saveUserData();
     }
 
     addChatMessage(user, rank, msg) {
@@ -1594,6 +1635,88 @@ class UserPortal {
             this.showNotification(`${theme.name} Installed! Check Support tab.`, 'success');
             this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
         }, 1000);
+    }
+
+    initBackground() {
+        // Create Canvas
+        const canvas = document.createElement('canvas');
+        canvas.id = 'bgCanvas';
+        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        const resize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2;
+                this.color = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Init Particles
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
+        }
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw connections
+            particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+
+                // Connect nearby particles
+                for (let j = index + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 100) {
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 100)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animate);
+        };
+        animate();
     }
 
     executeScript(index) {
