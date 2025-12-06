@@ -1,0 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1a1d23 0%, #0f1115 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Login Overlay */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0f1115;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card {
+    background: #2b2d31;
+    padding: 40px;
+    border-radius: 16px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.login-card h2 {
+    color: white;
+    margin: 15px 0 5px;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 12px;
+    margin: 20px 0;
+    background: #1e1f22;
+    border: 2px solid #383a40;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: #00ff00;
+}
+
+.login-card button {
+    width: 100%;
+    padding: 12px;
+    background: #00ff00;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.login-card button:hover {
+    transform: translateY(-2px);
+}
+
+.error-text {
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+/* Main Panel */
+.keygen-container {
+    animation: fadeIn 0.6s ease-out;
+    width: 100%;
+    max-width: 500px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.keygen-card {
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.8);
+        }
+    }
+
+    h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        font-size: 16px;
+        color: #80848e;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    /* Controls */
+    .control-group {
+        margin-bottom: 24px;
+    }
+
+    .control-group label {
+        display: block;
+        color: #b5bac1;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .duration-selector {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        background: #1e1f22;
+        padding: 4px;
+        border-radius: 8px;
+    }
+
+    .duration-btn {
+        background: transparent;
+        border: none;
+        color: #80848e;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .duration-btn.active {
+        background: #383a40;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .duration-btn:hover:not(.active) {
+        color: #dbdee1;
+    }
+
+    .type-selector {
+        display: flex;
+        gap: 20px;
+        background: #1e1f22;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .radio-option input {
+        accent-color: #00ff00;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .radio-option label {
+        margin: 0;
+        cursor: pointer;
+        text-transform: none;
+        color: #dbdee1;
+    }
+
+    .input-section input {
+        width: 100%;
+        background: #1e1f22;
+        border: 2px solid #383a40;
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #ffffff;
+        font-family: 'Courier New', monospace;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+
+    .input-section input:focus {
+        outline: none;
+        border-color: #00ff00;
+    }
+
+    .generate-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #000000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+        margin-top: 10px;
+    }
+
+    .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 255, 0, 0.4);
+    }
+
+    /* Result */
+    .key-result {
+        display: none;
+        background: #1e1f22;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 24px;
+        animation: slideDown 0.4s ease-out;
+    }
+
+    .key-result.active {
+        display: block;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .key-display {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #2b2d31;
+        border-radius: 6px;
+        padding: 12px;
+        margin: 10px 0;
+    }
+
+    #generatedKey {
+        flex: 1;
+        font-size: 16px;
+        font-weight: 600;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 1px;
+    }
+
+    .copy-btn {
+        background: #383a40;
+        border: none;
+        border-radius: 6px;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 16px;
+    }
+
+    .copy-btn:hover {
+        background: #00ff00;
+        transform: scale(1.1);
+    }
+
+    .key-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #80848e;
+        margin-top: 8px;
+    }
