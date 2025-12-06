@@ -695,6 +695,18 @@ class UserPortal {
         }
     }
 
+    attachNavListeners(keyData) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = item.dataset.tab;
+                this.activeTab = tab;
+                this.renderPortal(keyData);
+            });
+        });
+    }
+
     getRankColor(rank) {
         return (this.rankDefinitions[rank] || this.rankDefinitions['User']).color;
     }
