@@ -41,11 +41,11 @@ class UserPortal {
 
         // Rank Definitions
         this.rankDefinitions = {
-            'Founder': { color: '#00ffff', icon: 'fa-snowflake', priority: 100 },
-            'Developer': { color: '#00FF00', icon: 'fa-terminal', priority: 90 },
-            'Admin': { color: '#FF4500', icon: 'fa-user-shield', priority: 80 },
+            'Founder': { color: '#FFD700', icon: 'fa-crown', priority: 100 },
+            'Developer': { color: '#00FF00', icon: 'fa-code', priority: 90 },
+            'Admin': { color: '#FF4500', icon: 'fa-shield-alt', priority: 80 },
             'Moderator': { color: '#1E90FF', icon: 'fa-gavel', priority: 70 },
-            'VIP': { color: '#E0FFFF', icon: 'fa-gem', priority: 50 },
+            'VIP': { color: '#9D00FF', icon: 'fa-star', priority: 50 },
             'User': { color: '#9ca3af', icon: 'fa-user', priority: 10 }
         };
 
