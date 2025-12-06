@@ -1,4 +1,4 @@
-alert("DEBUG: Quantum Portal JS V2.5 Loaded! If you see this, the file is working.");
+
 class UserPortal {
     constructor() {
         this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
