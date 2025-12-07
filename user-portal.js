@@ -429,6 +429,19 @@ class UserPortal {
 
         // Visualizer Loop
         this.visualizerInterval = null;
+
+        // Heartbeat for Online Status
+        setInterval(() => {
+            if (this.currentUser && this.currentUser.key && this.supabase) {
+                this.supabase
+                    .from('keys')
+                    .update({ last_seen: new Date().toISOString() })
+                    .eq('key', this.currentUser.key)
+                    .then(({ error }) => {
+                        if (error) console.error('Heartbeat error:', error);
+                    });
+            }
+        }, 30000); // Every 30 seconds
     }
 
     init() {
@@ -451,6 +464,8 @@ class UserPortal {
                 this.toggleGhostMode();
             }
         });
+
+        this.fetchAnnouncement();
     }
 
     loadUserData(key) {
@@ -1617,7 +1632,7 @@ class UserPortal {
                             <label>JumpPower</label>
                             <input type="number" id="genJumpPower" class="modern-input" value="50">
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                                 <input type="checkbox" id="genEsp"> ESP (Wallhack)
                             </label>
@@ -1628,14 +1643,16 @@ class UserPortal {
                                 <input type="checkbox" id="genInfiniteJump"> Infinite Jump
                             </label>
                         </div>
+
                         <button class="btn-primary" onclick="window.userPortal.generateScript()">
-                            <i class="fas fa-bolt"></i> Generate Script
+                            <i class="fas fa-code"></i> Generate Script
                         </button>
                     </div>
+
                     <div>
                         <h3 style="margin-bottom: 15px;">Output</h3>
                         <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
-                        <button class="btn-primary" style="margin-top: 10px; background: rgba(255,255,255,0.1);" onclick="window.userPortal.copyGeneratedScript()">
+                        <button class="btn-secondary" style="margin-top: 10px; width: 100%;" onclick="window.userPortal.copyGeneratedScript()">
                             <i class="fas fa-copy"></i> Copy to Clipboard
                         </button>
                     </div>
@@ -1644,63 +1661,7 @@ class UserPortal {
         `;
     }
 
-    renderMarketplaceContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Theme Marketplace</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="themeCodeInput" class="modern-input" placeholder="Enter Code (Rank or Theme)..." style="margin-bottom: 0;">
-                <button class="btn-primary" style="width: auto;" onclick="window.userPortal.redeemCode()">Redeem</button>
-            </div>
-            
-            <div class="theme-grid">
-                ${this.availableThemes.map(theme => `
-                    <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                        <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                            ${theme.name}
-                        </div>
-                        <div style="padding: 10px; text-align: center;">
-                            <div style="font-weight: bold; font-size: 14px;">${theme.name}</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">${theme.author}</div>
-                            <div style="font-size: 10px; color: var(--accent-color); margin-top: 5px;">FREE</div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    redeemCode() {
-        const input = document.getElementById('themeCodeInput');
-        const code = input.value.trim().toUpperCase();
-        if (!code) return;
-
-        // Rank Codes
-        const rankCodes = {
-            'QUANTUM_FOUNDER_999': 'Founder',
-            'DEV_MODE_ON': 'Developer',
-            'ADMIN_POWER_UP': 'Admin',
-            'MOD_SQUAD_2025': 'Moderator',
-            'VIP_STATUS_NOW': 'VIP'
-        };
-
-        if (rankCodes[code]) {
-            const newRank = rankCodes[code];
-            if (this.rank === newRank) {
-                this.showNotification(`You are already ${newRank}!`, 'info');
-                return;
-            }
-            this.rank = newRank;
-            this.saveUserData();
-            this.showNotification(`Success! Rank updated to ${newRank}`, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-
-            // Play success sound
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => { });
-            return;
-        }
-
+    redeemCode(code) {
         // Theme Codes
         const theme = this.availableThemes.find(t => t.code === code);
         if (theme) {
@@ -1717,43 +1678,43 @@ class UserPortal {
 
         return `
             <h2 style="margin-bottom: 20px;">Command Center</h2>
-            <div class="glass-card">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border);">
-                    <div style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                        <i class="fas ${this.rankDefinitions[this.rank].icon}" style="color: ${this.rankDefinitions[this.rank].color};"></i>
+                <div class="glass-card">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border);">
+                        <div style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            <i class="fas ${this.rankDefinitions[this.rank].icon}" style="color: ${this.rankDefinitions[this.rank].color};"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0;">${this.currentUser.username}</h3>
+                            <p style="color: var(--text-secondary); margin: 0;">Current Rank: <span style="color: ${this.rankDefinitions[this.rank].color}; font-weight: bold;">${this.rank}</span></p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style="margin: 0;">${this.currentUser.username}</h3>
-                        <p style="color: var(--text-secondary); margin: 0;">Current Rank: <span style="color: ${this.rankDefinitions[this.rank].color}; font-weight: bold;">${this.rank}</span></p>
-                    </div>
-                </div>
 
-                <div style="display: grid; gap: 10px;">
-                    ${Object.entries(this.commands).map(([cmd, details]) => {
+                    <div style="display: grid; gap: 10px;">
+                        ${Object.entries(this.commands).map(([cmd, details]) => {
             const requiredPriority = this.rankDefinitions[details.rank].priority;
             const hasPermission = userPriority >= requiredPriority;
 
             return `
-                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; opacity: ${hasPermission ? 1 : 0.5};">
-                                <div>
-                                    <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: ${hasPermission ? 'var(--accent-color)' : 'var(--text-secondary)'};">
-                                        ${cmd}
-                                    </div>
-                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">${details.desc}</div>
-                                    <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">Usage: ${details.usage}</div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; opacity: ${hasPermission ? 1 : 0.5};">
+                            <div>
+                                <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: ${hasPermission ? 'var(--accent-color)' : 'var(--text-secondary)'};">
+                                    ${cmd}
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Requires</div>
-                                    <div style="font-weight: bold; color: ${this.rankDefinitions[details.rank].color};">
-                                        ${details.rank.toUpperCase()}
-                                    </div>
-                                    ${!hasPermission ? '<div style="color: #ef4444; font-size: 10px; margin-top: 5px;"><i class="fas fa-lock"></i> LOCKED</div>' : '<div style="color: #10b981; font-size: 10px; margin-top: 5px;"><i class="fas fa-check"></i> UNLOCKED</div>'}
-                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">${details.desc}</div>
+                                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">Usage: ${details.usage}</div>
                             </div>
-                        `;
+                            <div style="text-align: right;">
+                                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Requires</div>
+                                <div style="font-weight: bold; color: ${this.rankDefinitions[details.rank].color};">
+                                    ${details.rank.toUpperCase()}
+                                </div>
+                                ${!hasPermission ? '<div style="color: #ef4444; font-size: 10px; margin-top: 5px;"><i class="fas fa-lock"></i> LOCKED</div>' : '<div style="color: #10b981; font-size: 10px; margin-top: 5px;"><i class="fas fa-check"></i> UNLOCKED</div>'}
+                            </div>
+                        </div>
+                    `;
         }).join('')}
+                    </div>
                 </div>
-            </div>
         `;
     }
 
@@ -1763,7 +1724,7 @@ class UserPortal {
             this.currentUser.theme = themeName;
             this.saveUserData();
             this.applyTheme(themeName);
-            this.showNotification(`Theme applied: ${themeName}`, 'success');
+            this.showNotification(`Theme applied: ${themeName} `, 'success');
             this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
         }
     }
@@ -1779,70 +1740,97 @@ class UserPortal {
     renderProfileContent() {
         return `
             <h2 style="margin-bottom: 20px;">Profile Settings</h2>
-            <div class="glass-card">
-                <div class="profile-edit-header">
-                    <div class="profile-avatar-edit" onclick="document.getElementById('avatarUpload').click()">
-                        ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : '<i class="fas fa-user"></i>'}
+                <div class="glass-card">
+                    <div class="profile-edit-header">
+                        <div class="profile-avatar-edit">
+                            ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <div>
+                            <h3>${this.currentUser.username}</h3>
+                            <p style="color: var(--text-secondary);">Rank: ${this.rank}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3>${this.currentUser.username}</h3>
-                        <p style="color: var(--text-secondary);">Rank: ${this.rank}</p>
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" class="modern-input" value="${this.currentUser.username}" id="editUsername">
-                </div>
-                
-                <div class="input-group">
-                    <label>Profile Banner URL</label>
-                    <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/image.jpg">
-                </div>
 
-                <div style="margin-top: 20px;">
-                    <label style="display: block; margin-bottom: 10px;">Theme Selection</label>
-                    <div class="theme-grid">
-                        ${this.availableThemes.map(theme => `
-                            <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                                <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                                    ${theme.name}
-                                </div>
-                                <div style="padding: 5px; text-align: center;">
-                                    <div style="font-size: 10px; color: var(--text-secondary);">${theme.name}</div>
-                                </div>
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" class="modern-input" value="${this.currentUser.username}" id="editUsername">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Avatar URL</label>
+                        <input type="text" class="modern-input" value="${this.currentUser.avatar || ''}" id="editAvatar" placeholder="https://example.com/avatar.jpg">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Profile Banner URL</label>
+                        <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/banner.jpg">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Bio</label>
+                        <textarea class="modern-input" id="editBio" rows="3" placeholder="Tell us about yourself...">${this.currentUser.bio || ''}</textarea>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 10px;">Theme Selection</label>
+                        <div class="theme-grid">
+                            ${this.availableThemes.map(theme => `
+                        <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
+                            <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
+                                ${theme.name}
                             </div>
-                        `).join('')}
+                            <div style="padding: 5px; text-align: center;">
+                                <div style="font-size: 10px; color: var(--text-secondary);">${theme.name}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                        </div>
                     </div>
-                </div>
 
-                <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
-            </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
+                </div>
         `;
     }
 
-    saveProfile() {
+    async saveProfile() {
         const newUsername = document.getElementById('editUsername').value;
+        const newAvatar = document.getElementById('editAvatar').value;
         const newBanner = document.getElementById('editBanner').value;
+        const newBio = document.getElementById('editBio').value;
 
         if (newUsername) this.currentUser.username = newUsername;
+        this.currentUser.avatar = newAvatar;
         this.currentUser.banner = newBanner;
+        this.currentUser.bio = newBio;
+
+        if (this.supabase && this.currentUser.key) {
+            const { error } = await this.supabase
+                .from('keys')
+                .update({
+                    avatar_url: newAvatar,
+                    banner_url: newBanner,
+                    bio: newBio
+                })
+                .eq('key', this.currentUser.key);
+
+            if (error) {
+                console.error('Error saving profile:', error);
+                this.showNotification('Failed to save to cloud', 'error');
+            }
+        }
 
         this.saveUserData();
         this.showNotification('Profile updated!', 'success');
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-    }
 
-    handleAvatarUpload(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.currentUser.avatar = e.target.result;
-                this.saveUserData();
-                this.showNotification('Avatar updated!', 'success');
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            };
-            reader.readAsDataURL(input.files[0]);
+        if (this.supabase) {
+            const { data: keyData } = await this.supabase
+                .from('keys')
+                .select('*')
+                .eq('key', this.currentUser.key)
+                .single();
+            if (keyData) this.renderPortal(keyData);
+        } else {
+            this.renderPortal({ ...this.currentUser, status: 'active' });
         }
     }
 
@@ -1917,19 +1905,19 @@ class UserPortal {
         script += `local plr = game.Players.LocalPlayer\n`;
         script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
 
-        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws}\n`;
-        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp}\n`;
+        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws} \n`;
+        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp} \n`;
 
         if (infJump) {
             script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
         }
 
         if (esp) {
-            script += `\n-- Simple ESP\nfor _,p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1,0,0)\n    end\nend\n`;
+            script += `\n-- Simple ESP\nfor _, p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1, 0, 0)\n    end\nend\n`;
         }
 
         if (aimbot) {
-            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _,p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
+            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _, p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
         }
 
         document.getElementById('genOutput').value = script;
@@ -1942,6 +1930,94 @@ class UserPortal {
         navigator.clipboard.writeText(output.value).then(() => {
             this.showNotification('Copied to clipboard!', 'success');
         });
+    }
+
+    async fetchAnnouncement() {
+        if (!this.supabase) return;
+
+        const { data, error } = await this.supabase
+            .from('announcements')
+            .select('*')
+            .eq('active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (data) {
+            const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+            if (!dismissed.includes(data.id.toString())) {
+                this.renderAnnouncement(data);
+            }
+        }
+    }
+
+    renderAnnouncement(announcement) {
+        const existing = document.getElementById('global-announcement-toast');
+        if (existing) existing.remove();
+
+        const colors = {
+            info: '#3b82f6',
+            warning: '#f59e0b',
+            error: '#ef4444',
+            success: '#10b981'
+        };
+        const icons = {
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle',
+            error: 'fa-exclamation-circle',
+            success: 'fa-check-circle'
+        };
+
+        const toast = document.createElement('div');
+        toast.id = 'global-announcement-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 30, 0.95);
+            border-left: 4px solid ${colors[announcement.type] || colors.info};
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            transform: translateX(100%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        `;
+
+        toast.innerHTML = `
+            <i class="fas ${icons[announcement.type] || icons.info}" style="color: ${colors[announcement.type] || colors.info}; font-size: 20px; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+                <div style="font-weight: bold; margin-bottom: 5px; color: white;">Announcement</div>
+                <div style="color: #ccc; font-size: 14px; line-height: 1.4;">${announcement.message}</div>
+            </div>
+            <button onclick="window.userPortal.dismissAnnouncement('${announcement.id}')" style="background: none; border: none; color: #666; cursor: pointer; padding: 0; font-size: 16px; margin-left: 10px;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(0)';
+        });
+    }
+
+    dismissAnnouncement(id) {
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+        dismissed.push(id.toString());
+        localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
+
+        const toast = document.getElementById('global-announcement-toast');
+        if (toast) {
+            toast.style.transform = 'translateX(120%)';
+            setTimeout(() => toast.remove(), 500);
+        }
     }
 
     initBackground() {
