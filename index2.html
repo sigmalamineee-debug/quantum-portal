@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum UI - Preview</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="ui-container" id="mainUI">
+        <!-- Header -->
+        <div class="header">
+            <img src="assets/logo_christmas.png" alt="Quantum Logo" class="logo-img">
+            <h1 class="title">Quantum</h1>
+            <button class="close-btn" id="closeBtn">×</button>
+        </div>
+
+        <!-- User Info Bar -->
+        <div class="user-info-bar">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/36" alt="Avatar" id="avatarImg">
+            </div>
+            <div class="user-info">
+                <div class="username" id="username">Guest User</div>
+                <div class="expiry" id="expiry">Expiry: Not Active</div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">FPS</div>
+                    <div class="stat-value" id="fpsValue">240</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Ping</div>
+                    <div class="stat-value" id="pingValue">92</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="content-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Group: RCFA -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">RCFA</div>
+                    <button class="category-btn active" data-category="rcfa">
+                        <span class="icon">⚡</span>
+                        <span class="label">RCFA</span>
+                    </button>
+                </div>
+
+                <!-- Group: High School Football -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">High School Football</div>
+                    <button class="category-btn" data-category="hsfl">
+                        <span class="icon">🏈</span>
+                        <span class="label">HSFL</span>
+                    </button>
+                </div>
+
+                <!-- Group: RFL -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">RFL</div>
+                    <button class="category-btn" data-category="rfl">
+                        <span class="icon">⚡</span>
+                        <span class="label">RFL</span>
+                    </button>
+                </div>
+
+                <!-- Group: FLAG FOOTBALL -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">FLAG FOOTBALL</div>
+                    <button class="category-btn" data-category="flag">
+                        <span class="icon">🚩</span>
+                        <span class="label">FLAG FOOTBALL</span>
+                    </button>
+                </div>
+
+                <!-- Group: JUCO -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">JUCO</div>
+                    <button class="category-btn" data-category="juco">
+                        <span class="icon">👥</span>
+                        <span class="label">JUCO</span>
+                    </button>
+                </div>
+
+                <!-- Group: HSFL -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">HSFL</div>
+                    <button class="category-btn" data-category="hsfl3">
+                        <span class="icon">⚡</span>
+                        <span class="label">HSFL</span>
+                    </button>
+                </div>
+
+                <!-- Group: OCFA -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">OCFA</div>
+                    <button class="category-btn" data-category="ocfa">
+                        <span class="icon">📍</span>
+                        <span class="label">OCFA</span>
+                    </button>
+                </div>
+
+                <!-- Group: SYSTEM -->
+                <div class="sidebar-group">
+                    <div class="sidebar-header-text">SYSTEM</div>
+                    <button class="category-btn" data-category="settings">
+                        <span class="icon">⚙️</span>
+                        <span class="label">Settings</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content (Two Column Grid) -->
+            <div class="main-content">
+                <!-- Left Column: Game Controls Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Game Controls (RCFA)</h2>
+                        <span class="dropdown-icon">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <!-- Mags Toggle -->
+                        <div class="control-item">
+                            <label>Mags</label>
+                            <div class="toggle" data-toggle="mags">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Magnet Range Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Magnet Range</label>
+                                <span class="value">12</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="12">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- JumpPower Toggle -->
+                        <div class="control-item">
+                            <label>JumpPower</label>
+                            <div class="toggle" data-toggle="jumppower">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Jump Power Value Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Jump Power Value</label>
+                                <span class="value">50</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="50">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Tuck Toggle -->
+                        <div class="control-item">
+                            <label>Auto Tuck</label>
+                            <div class="toggle" data-toggle="autotuck">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Tuck Delay Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Auto Tuck Delay</label>
+                                <span class="value">0.5</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="0.5" data-step="0.1">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Swat Toggle -->
+                        <div class="control-item">
+                            <label>Auto Swat</label>
+                            <div class="toggle" data-toggle="autoswat">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Swat Range Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Swat Range</label>
+                                <span class="value">4</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="4">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Movement & Catching Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Movement & Catching (RCFA)</h2>
+                        <span class="dropdown-icon">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <!-- Walk Speed Toggle -->
+                        <div class="control-item">
+                            <label>Walk Speed</label>
+                            <div class="toggle" data-toggle="walkspeed">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Walk Speed Value Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Walk Speed Value</label>
+                                <span class="value">16</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="16">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Catch Toggle -->
+                        <div class="control-item">
+                            <label>Auto Catch</label>
+                            <div class="toggle" data-toggle="autocatch">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Catch Range Slider -->
+                        <div class="control-item slider-item">
+                            <div class="slider-header">
+                                <label>Catch Range</label>
+                                <span class="value">4</span>
+                            </div>
+                            <div class="slider" data-min="0" data-max="4">
+                                <div class="slider-track">
+                                    <div class="slider-fill" style="width: 100%"></div>
+                                    <div class="slider-thumb" style="left: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: RCFA Features Info Box -->
+                <div class="rcfa-features">
+                    <h3>RCFA Features</h3>
+                    <p>All core features are available in the RCFA category</p>
+                </div>
+
+                <!-- Bottom: Exploitation Section (Full Width) -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Exploitation</h2>
+                        <span class="dropdown-icon">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <!-- Anti Cheat Bypass Toggle -->
+                        <div class="control-item">
+                            <label>Anti Cheat Bypass</label>
+                            <div class="toggle" data-toggle="bypass">
+                                <div class="toggle-circle"></div>
+                            </div>
+                        </div>
+                        <div class="bypass-info">
+                            <p>Bypass Info</p>
+                            <p class="must-click">MUST CLICK!!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Content Area (Dynamically loaded) -->
+            <div class="settings-content-area" id="settingsContent" style="display: none;"></div>
+
+            <!-- In Development Placeholder -->
+            <div class="in-development" id="inDevelopment">
+                <div class="in-development-icon">🚧</div>
+                <h2>In Development</h2>
+                <p>This section is currently under development. Check back soon for updates!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="background.js"></script>
+    <script src="themes.js"></script>
+    <script src="tooltips.js"></script>
+    <script src="achievements.js"></script>
+    <script src="keyboard.js"></script>
+    <script src="settings.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize theme system
+            window.themeManager = new ThemeManager();
+            window.achievementManager = new AchievementManager();
+        });
+    </script>
+</body>
+
+</html>
