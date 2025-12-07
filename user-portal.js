@@ -14,8 +14,9 @@ class UserPortal {
         this.deviceHwid = localStorage.getItem('device_hwid');
 
         // Persistent Chat Data
-        this.chatMessages = JSON.parse(localStorage.getItem('quantum_global_chat')) || [];
+        this.chatMessages = [];
         this.chatRefreshInterval = null; // Auto-refresh timer
+        this.supabase = window.supabaseClient;
 
         // Music Player State
         this.currentTrackIndex = 0;
@@ -568,7 +569,7 @@ class UserPortal {
                 <div class="glass-card">
                     <div class="brand-header">
                         <div class="brand-logo" style="width: 60px; height: 60px; margin: 0 auto 15px auto;">
-                            <img src="logo.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            <img src="assets/logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <h1 class="brand-title">Quantum Portal</h1>
                         <p style="color: var(--text-secondary); font-size: 14px; margin-top: 5px;">Enter your access key to continue</p>
@@ -717,7 +718,7 @@ class UserPortal {
                 <div class="portal-sidebar">
                     <div class="brand-header" style="margin-bottom: 40px; text-align: left;">
                         <div class="brand-logo" style="width: 40px; height: 40px; margin: 0 0 10px 0;">
-                            <img src="logo.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            <img src="assets/logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <h2 class="brand-title" style="font-size: 20px;">Quantum</h2>
                     </div>
@@ -780,6 +781,11 @@ class UserPortal {
             </div>
             <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="window.userPortal.handleAvatarUpload(this)">
         `;
+
+        if (!this.chatInitialized) {
+            this.initChat();
+            this.chatInitialized = true;
+        }
 
         this.attachNavListeners(keyData);
         this.applyTheme(this.currentUser.theme || 'default');
@@ -1278,6 +1284,44 @@ class UserPortal {
         `;
     }
 
+    async initChat() {
+        if (!this.supabase) return;
+
+        // Fetch initial messages
+        const { data, error } = await this.supabase
+            .from('chat_messages')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (data) {
+            this.chatMessages = data.reverse().map(m => ({
+                user: m.username,
+                rank: m.rank,
+                msg: m.message,
+                time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+            this.refreshChatDisplay();
+        }
+
+        // Subscribe to new messages
+        this.supabase
+            .channel('public:chat_messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+                const m = payload.new;
+                const msg = {
+                    user: m.username,
+                    rank: m.rank,
+                    msg: m.message,
+                    time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                this.chatMessages.push(msg);
+                if (this.chatMessages.length > 50) this.chatMessages.shift(); // Keep last 50
+                this.refreshChatDisplay();
+            })
+            .subscribe();
+    }
+
     sendChatMessage() {
         // Ban Check
         const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
@@ -1465,22 +1509,22 @@ class UserPortal {
         this.saveUserData();
     }
 
-    addChatMessage(user, rank, msg) {
+    async addChatMessage(user, rank, msg) {
+        if (!this.supabase) return;
+
         const newMessage = {
-            user,
-            rank,
-            msg,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            username: user,
+            rank: rank,
+            message: msg
         };
 
-        this.chatMessages.push(newMessage);
+        const { error } = await this.supabase
+            .from('chat_messages')
+            .insert([newMessage]);
 
-        // Save to localStorage for persistence
-        localStorage.setItem('quantum_global_chat', JSON.stringify(this.chatMessages));
-
-        // Re-render chat if active
-        if (this.activeTab === 'chat') {
-            this.refreshChatDisplay();
+        if (error) {
+            console.error('Error sending message:', error);
+            this.showNotification('Failed to send message', 'error');
         }
     }
 
