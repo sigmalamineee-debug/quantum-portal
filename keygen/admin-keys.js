@@ -174,7 +174,9 @@ class AuthManager {
 class AdminKeyManager {
     constructor(role = 'admin') {
         this.role = role;
-        this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
+        // Supabase Integration
+        this.supabase = window.supabaseClient;
+        this.keys = [];
         this.users = JSON.parse(localStorage.getItem('admin_users')) || [];
         this.activityLog = JSON.parse(localStorage.getItem('admin_activity')) || [];
         this.blacklist = JSON.parse(localStorage.getItem('admin_blacklist')) || [];
@@ -184,12 +186,34 @@ class AdminKeyManager {
         this.init();
     }
 
-    init() {
+    async init() {
         this.renderSidebar();
+        await this.fetchKeys(); // Fetch keys from Supabase
         this.renderDashboardView();
         this.setupEventListeners();
         this.setupKeyboardShortcuts();
         this.applyTheme(document.body, localStorage.getItem('admin_theme') || '');
+    }
+
+    async fetchKeys() {
+        if (!this.supabase) {
+            console.error('Supabase client not initialized');
+            return;
+        }
+
+        const { data, error } = await this.supabase
+            .from('keys')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            this.showNotification('Error fetching keys: ' + error.message, 'error');
+            return;
+        }
+
+        this.keys = data || [];
+        this.renderKeysView();
+        this.renderDashboardView();
     }
 
     getLogo() {
@@ -436,8 +460,8 @@ class AdminKeyManager {
                                 <td><code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${k.key}</code></td>
                                 <td>${this.getDurationLabel(k.duration)}</td>
                                 <td><span class="status-badge ${k.status}">${k.status}</span></td>
-                                <td>${new Date(k.createdAt || k.created).toLocaleDateString()}</td>
-                                <td>${k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : 'Never'}</td>
+                                <td>${new Date(k.created_at).toLocaleDateString()}</td>
+                                <td>${k.expires_at ? new Date(parseInt(k.expires_at)).toLocaleDateString() : 'Never'}</td>
                                 <td>
                                     <div class="action-btn-group">
                                         <button class="icon-btn copy-btn" onclick="window.adminKeyManager.copyToClipboard('${k.key}')" title="Copy Key">
@@ -525,8 +549,8 @@ class AdminKeyManager {
             k.key,
             k.duration,
             k.status,
-            new Date(k.createdAt || k.created).toISOString(),
-            k.expiresAt ? new Date(k.expiresAt).toISOString() : 'Never',
+            new Date(k.created_at).toISOString(),
+            k.expires_at ? new Date(parseInt(k.expires_at)).toISOString() : 'Never',
             k.hwid || 'N/A'
         ]);
 
@@ -558,11 +582,22 @@ class AdminKeyManager {
 
     // --- New Key Management Logic ---
 
-    toggleKeyStatus(keyStr) {
+    async toggleKeyStatus(keyStr) {
         const key = this.keys.find(k => k.key === keyStr);
         if (key) {
-            key.status = key.status === 'active' ? 'paused' : 'active';
-            this.saveKeys();
+            const newStatus = key.status === 'active' ? 'paused' : 'active';
+
+            const { error } = await this.supabase
+                .from('keys')
+                .update({ status: newStatus })
+                .eq('key', keyStr);
+
+            if (error) {
+                this.showNotification('Error updating status: ' + error.message, 'error');
+                return;
+            }
+
+            key.status = newStatus;
             this.renderKeysView();
             this.renderDashboardView(); // Update stats
             this.showNotification(`Key ${key.status === 'active' ? 'Resumed' : 'Paused'}`, 'success');
@@ -577,11 +612,11 @@ class AdminKeyManager {
         }
     }
 
-    addTime(keyStr, durationCode) {
+    async addTime(keyStr, durationCode) {
         const key = this.keys.find(k => k.key === keyStr);
         if (!key) return;
 
-        if (key.duration === 'LT' || !key.expiresAt) {
+        if (key.duration === 'LT' || !key.expires_at) { // Changed expiresAt to expires_at
             this.showNotification('Cannot add time to Lifetime keys', 'warning');
             return;
         }
@@ -598,8 +633,19 @@ class AdminKeyManager {
                 return;
         }
 
-        key.expiresAt += msToAdd;
-        this.saveKeys();
+        const newExpiry = parseInt(key.expires_at) + msToAdd;
+
+        const { error } = await this.supabase
+            .from('keys')
+            .update({ expires_at: newExpiry })
+            .eq('key', keyStr);
+
+        if (error) {
+            this.showNotification('Error adding time: ' + error.message, 'error');
+            return;
+        }
+
+        key.expires_at = newExpiry;
         this.renderKeysView();
         this.showNotification(`Added time to key`, 'success');
         this.logActivity('Add Time', `Added ${durationCode} to ${key.key}`);
@@ -733,7 +779,7 @@ class AdminKeyManager {
         };
     }
 
-    handleGenerateKey(duration, hwid) {
+    async handleGenerateKey(duration, hwid) {
         const prefix = localStorage.getItem('admin_key_prefix') || 'QTM';
         let key = "";
         if (hwid) {
@@ -761,17 +807,28 @@ class AdminKeyManager {
             key: key,
             duration: duration,
             status: 'active',
-            createdAt: now,
-            expiresAt: expiresAt,
+            created_at: new Date().toISOString(),
+            expires_at: expiresAt,
             hwid: hwid || null
         };
 
-        this.keys.unshift(newKey);
-        this.saveKeys();
-        this.renderKeysView();
-        this.renderDashboardView();
-        this.showNotification(`Generated ${this.getDurationLabel(duration)} Key`, 'success');
-        this.logActivity('Generate Key', `Generated ${duration} key`);
+        const { data, error } = await this.supabase
+            .from('keys')
+            .insert([newKey])
+            .select();
+
+        if (error) {
+            this.showNotification('Error generating key: ' + error.message, 'error');
+            return;
+        }
+
+        if (data && data.length > 0) {
+            this.keys.unshift(data[0]);
+            this.renderKeysView();
+            this.renderDashboardView();
+            this.showNotification(`Generated ${this.getDurationLabel(duration)} Key`, 'success');
+            this.logActivity('Generate Key', `Generated ${duration} key`);
+        }
     }
 
     renderUsersView() {

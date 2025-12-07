@@ -91,6 +91,8 @@ function addKeyToAdminSystem(key, duration, hwid) {
         case '1D': expiresAt = Date.now() + (24 * 60 * 60 * 1000); break;
         case '1W': expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); break;
         case '1M': expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000); break;
+        case '3M': expiresAt = Date.now() + (90 * 24 * 60 * 60 * 1000); break;
+        case '1Y': expiresAt = Date.now() + (365 * 24 * 60 * 60 * 1000); break;
         case 'LT': expiresAt = null; break; // Lifetime
     }
 
@@ -163,6 +165,8 @@ function getDurationLabel(code) {
         '1D': '1 Day',
         '1W': '1 Week',
         '1M': '1 Month',
+        '3M': '3 Months',
+        '1Y': '1 Year',
         'LT': 'Lifetime'
     };
     return map[code] || code;

@@ -1,22 +1,6 @@
 
 class UserPortal {
     constructor() {
-        // Initialize Supabase (with error handling)
-        try {
-            if (window.supabase) {
-                const SUPABASE_URL = 'https://ausifkhslbkvgyskwrps.supabase.co';
-                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1c2lma2hzbGJrdmd5c2t3cnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMTA2NjYsImV4cCI6MjA4MDU4NjY2Nn0.yovv7wZKSZaykq2Hms6UWvFYy30LUXy68qEAHu5MU3c';
-                this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase initialized successfully');
-            } else {
-                console.warn('Supabase library not loaded, falling back to localStorage');
-                this.supabase = null;
-            }
-        } catch (error) {
-            console.error('Failed to initialize Supabase:', error);
-            this.supabase = null;
-        }
-
         this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
         this.currentUser = JSON.parse(localStorage.getItem('user_auth_session')) || null;
         this.allUserData = JSON.parse(localStorage.getItem('quantum_user_data_store')) || {};
@@ -625,6 +609,13 @@ class UserPortal {
     }
 
     async handleLogin() {
+        // Supabase Integration
+        this.supabase = window.supabaseClient;
+        if (!this.supabase) {
+            this.showNotification('System Error: Database not connected', 'error');
+            return;
+        }
+
         const input = document.getElementById('keyInput');
         const keyStr = input.value.trim();
 
@@ -633,32 +624,14 @@ class UserPortal {
             return;
         }
 
-        let keyData = null;
+        // Fetch key from Supabase
+        const { data: keyData, error } = await this.supabase
+            .from('keys')
+            .select('*')
+            .eq('key', keyStr)
+            .single();
 
-        // Try Supabase first, fall back to localStorage
-        if (this.supabase) {
-            try {
-                const { data, error } = await this.supabase
-                    .from('keys')
-                    .select('*')
-                    .eq('key', keyStr)
-                    .single();
-
-                if (!error && data) {
-                    keyData = data;
-                }
-            } catch (err) {
-                console.error('Supabase fetch error:', err);
-            }
-        }
-
-        // Fallback to localStorage if Supabase failed or unavailable
-        if (!keyData) {
-            this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
-            keyData = this.keys.find(k => k.key === keyStr);
-        }
-
-        if (!keyData) {
+        if (error || !keyData) {
             this.showNotification('Invalid Key', 'error');
             return;
         }
@@ -668,23 +641,27 @@ class UserPortal {
             return;
         }
 
-        if (keyData.expiresAt && Date.now() > keyData.expiresAt) {
+        if (keyData.expires_at && Date.now() > parseInt(keyData.expires_at)) {
             this.showNotification('Key is expired', 'error');
             return;
         }
 
         if (keyData.hwid && keyData.hwid !== this.deviceHwid) {
-            this.showNotification('This key is hwid locked', 'error');
+            this.showNotification('This key is HWID locked', 'error');
             return;
         }
 
+        // Bind HWID if not set
         if (!keyData.hwid) {
-            // Update HWID in Supabase
-            await this.supabase
+            const { error: updateError } = await this.supabase
                 .from('keys')
                 .update({ hwid: this.deviceHwid })
-                .eq('key', keyData.key);
+                .eq('key', keyStr);
 
+            if (updateError) {
+                this.showNotification('Error binding HWID', 'error');
+                return;
+            }
             keyData.hwid = this.deviceHwid;
         }
 
@@ -721,14 +698,15 @@ class UserPortal {
 
         // Session Expiration Check
         if (this.sessionCheckInterval) clearInterval(this.sessionCheckInterval);
-        this.sessionCheckInterval = setInterval(() => {
-            const currentKey = this.keys.find(k => k.key === this.currentUser.key);
-            if (currentKey && currentKey.expiresAt && Date.now() > currentKey.expiresAt) {
-                clearInterval(this.sessionCheckInterval);
-                this.logout();
-                alert("Your key has expired.");
-            }
-        }, 60000); // Check every minute
+        if (keyData.expires_at) {
+            this.sessionCheckInterval = setInterval(() => {
+                if (Date.now() > parseInt(keyData.expires_at)) {
+                    clearInterval(this.sessionCheckInterval);
+                    this.logout();
+                    alert("Your key has expired.");
+                }
+            }, 60000); // Check every minute
+        }
 
         const app = document.getElementById('app');
         const isMobile = window.innerWidth <= 768;
@@ -848,8 +826,8 @@ class UserPortal {
 
     renderDashboardContent(keyData) {
         let timeRemaining = 'Lifetime';
-        if (keyData.expiresAt) {
-            const diff = keyData.expiresAt - Date.now();
+        if (keyData.expires_at) {
+            const diff = parseInt(keyData.expires_at) - Date.now();
             timeRemaining = diff > 0 ? `${Math.floor(diff / (1000 * 60 * 60 * 24))} Days` : 'Expired';
         }
 
