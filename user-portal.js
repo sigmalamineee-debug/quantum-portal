@@ -809,7 +809,15 @@ class UserPortal {
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-color);"><i class="fas fa-clock"></i></div>
-                    <div class="stat-details"><h4>Time Remaining</h4><p>${timeRemaining}</p></div>
+                    <div class="stat-details">
+                        <h4>Time Remaining</h4>
+                        <p>${timeRemaining}</p>
+                        ${keyData.expires_at ? `
+                            <button onclick="window.userPortal.toggleKeyFreeze()" style="background: none; border: 1px solid var(--accent-color); color: var(--accent-color); font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-top: 5px;">
+                                ${keyData.is_paused ? 'Resume' : 'Pause'}
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);"><i class="fas fa-shield-alt"></i></div>
@@ -1135,8 +1143,13 @@ class UserPortal {
         this.currentTrackIndex = index;
         const track = this.playlist[index];
         if (track && track.url) {
+            // Initialize Visualizer on first play
+            if (!this.audioContext) {
+                this.initVisualizer();
+            }
+
             this.audioPlayer.src = track.url;
-            this.audioPlayer.play();
+            this.audioPlayer.play().catch(e => console.log("Playback failed:", e));
             this.isPlaying = true;
 
             // Reset lyrics if changing track
@@ -1145,6 +1158,75 @@ class UserPortal {
             }
 
             this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        }
+    }
+
+    initVisualizer() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            this.source = this.audioContext.createMediaElementSource(this.audioPlayer);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioContext.destination);
+            this.analyser.fftSize = 256;
+            this.bufferLength = this.analyser.frequencyBinCount;
+            this.dataArray = new Uint8Array(this.bufferLength);
+
+            // Create Background Canvas
+            if (!document.getElementById('audioVisualizer')) {
+                const canvas = document.createElement('canvas');
+                canvas.id = 'audioVisualizer';
+                canvas.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: -2;
+                    pointer-events: none;
+                    opacity: 0.5;
+                `;
+                document.body.insertBefore(canvas, document.body.firstChild);
+                this.visualizerCanvas = canvas;
+                this.visualizerCtx = canvas.getContext('2d');
+            }
+
+            this.drawVisualizer();
+        } catch (e) {
+            console.error("Visualizer init failed:", e);
+        }
+    }
+
+    drawVisualizer() {
+        if (!this.visualizerCtx || !this.analyser) return;
+
+        requestAnimationFrame(() => this.drawVisualizer());
+
+        this.analyser.getByteFrequencyData(this.dataArray);
+
+        const canvas = this.visualizerCanvas;
+        const ctx = this.visualizerCtx;
+        const width = canvas.width = window.innerWidth;
+        const height = canvas.height = window.innerHeight;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const barWidth = (width / this.bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+
+        for (let i = 0; i < this.bufferLength; i++) {
+            barHeight = this.dataArray[i] * 2; // Scale up
+
+            // Dynamic Color based on theme accent or rainbow
+            const r = barHeight + (25 * (i / this.bufferLength));
+            const g = 250 * (i / this.bufferLength);
+            const b = 50;
+
+            ctx.fillStyle = `rgba(${r},${g},${b}, 0.5)`;
+            ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+
+            x += barWidth + 1;
         }
     }
 
@@ -1605,43 +1687,243 @@ class UserPortal {
     renderGeneratorContent() {
         return `
             <h2 style="margin-bottom: 20px;">Script Generator</h2>
-            <div class="glass-card">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="glass-card" style="padding: 25px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- Left Column: Controls -->
                     <div>
-                        <h3 style="margin-bottom: 15px;">Features</h3>
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Configuration</h3>
+                        
                         <div class="input-group">
-                            <label>WalkSpeed</label>
-                            <input type="number" id="genWalkSpeed" class="modern-input" value="16">
+                            <label>Select Game / Script Type</label>
+                            <select id="genGame" class="modern-input" onchange="window.userPortal.updateGeneratorOptions()">
+                                <option value="universal">Universal (All Games)</option>
+                                <option value="bloxfruits">Blox Fruits</option>
+                                <option value="dahood">Da Hood</option>
+                                <option value="petsim99">Pet Simulator 99</option>
+                            </select>
                         </div>
-                        <div class="input-group">
-                            <label>JumpPower</label>
-                            <input type="number" id="genJumpPower" class="modern-input" value="50">
+
+                        <!-- Dynamic Options Container -->
+                        <div id="genOptions">
+                            <!-- Default: Universal -->
+                            <div class="input-group">
+                                <label>WalkSpeed</label>
+                                <input type="number" id="genWalkSpeed" class="modern-input" value="16">
+                            </div>
+                            <div class="input-group">
+                                <label>JumpPower</label>
+                                <input type="number" id="genJumpPower" class="modern-input" value="50">
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="genEsp"> ESP (Wallhack)
+                                    <span class="checkmark"></span>
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="genAimbot"> Aimbot (Universal)
+                                    <span class="checkmark"></span>
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="genInfiniteJump"> Infinite Jump
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genEsp"> ESP (Wallhack)
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genAimbot"> Aimbot
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genInfiniteJump"> Infinite Jump
-                            </label>
-                        </div>
-                        <button class="btn-primary" onclick="window.userPortal.generateScript()">
+
+                        <button class="btn-primary" style="margin-top: 25px;" onclick="window.userPortal.generateScript()">
                             <i class="fas fa-bolt"></i> Generate Script
                         </button>
                     </div>
-                    <div>
-                        <h3 style="margin-bottom: 15px;">Output</h3>
-                        <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
-                        <button class="btn-primary" style="margin-top: 10px; background: rgba(255,255,255,0.1);" onclick="window.userPortal.copyGeneratedScript()">
+
+                    <!-- Right Column: Output -->
+                    <div style="display: flex; flex-direction: column;">
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Generated Lua</h3>
+                        <div style="position: relative; flex-grow: 1;">
+                            <textarea id="genOutput" class="modern-input" style="height: 100%; min-height: 300px; font-family: 'Consolas', monospace; font-size: 12px; line-height: 1.5; resize: none;" readonly placeholder="-- Select options and click Generate..."></textarea>
+                            <div style="position: absolute; top: 10px; right: 10px;">
+                                <span style="background: rgba(59, 130, 246, 0.2); color: var(--accent-color); padding: 4px 8px; border-radius: 4px; font-size: 10px;">LUA</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary" style="margin-top: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);" onclick="window.userPortal.copyGeneratedScript()">
                             <i class="fas fa-copy"></i> Copy to Clipboard
                         </button>
                     </div>
                 </div>
             </div>
         `;
+    }
+
+    updateGeneratorOptions() {
+        const game = document.getElementById('genGame').value;
+        const container = document.getElementById('genOptions');
+
+        if (game === 'universal') {
+            container.innerHTML = `
+                <div class="input-group">
+                    <label>WalkSpeed</label>
+                    <input type="number" id="genWalkSpeed" class="modern-input" value="16">
+                </div>
+                <div class="input-group">
+                    <label>JumpPower</label>
+                    <input type="number" id="genJumpPower" class="modern-input" value="50">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="genEsp"> ESP (Wallhack)
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="genAimbot"> Aimbot (Universal)
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="genInfiniteJump"> Infinite Jump
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            `;
+        } else if (game === 'bloxfruits') {
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="bfAutoFarm"> Auto Farm Level
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="bfAutoChest"> Auto Collect Chests
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label>Select Weapon</label>
+                        <select id="bfWeapon" class="modern-input">
+                            <option value="Melee">Melee</option>
+                            <option value="Sword">Sword</option>
+                            <option value="Blox Fruit">Blox Fruit</option>
+                        </select>
+                    </div>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="bfEspFruit"> ESP Fruits
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            `;
+        } else if (game === 'dahood') {
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="dhSilentAim"> Silent Aim
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="dhAutoStomp"> Auto Stomp
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="dhFly"> Fly (CFrame)
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label>Fly Speed</label>
+                        <input type="number" id="dhFlySpeed" class="modern-input" value="100">
+                    </div>
+                </div>
+            `;
+        } else if (game === 'petsim99') {
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="psAutoFarm"> Auto Farm Coins
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="psAutoHatch"> Auto Hatch Eggs
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="psAutoRank"> Auto Rank Up
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            `;
+        }
+    }
+
+    generateScript() {
+        const game = document.getElementById('genGame').value;
+        let script = `-- Generated by Quantum UI\n-- Game: ${game.toUpperCase()}\n-- Date: ${new Date().toLocaleString()}\n\n`;
+        script += `local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()\n`;
+        script += `local Window = Library.CreateLib("Quantum - ${game.toUpperCase()}", "DarkTheme")\n`;
+        script += `local Tab = Window:NewTab("Main")\n`;
+        script += `local Section = Tab:NewSection("Features")\n\n`;
+
+        if (game === 'universal') {
+            const ws = document.getElementById('genWalkSpeed').value;
+            const jp = document.getElementById('genJumpPower').value;
+            const esp = document.getElementById('genEsp').checked;
+            const aimbot = document.getElementById('genAimbot').checked;
+            const infJump = document.getElementById('genInfiniteJump').checked;
+
+            if (ws && ws !== '16') {
+                script += `-- WalkSpeed\n`;
+                script += `Section:NewSlider("WalkSpeed", "Changes player speed", 500, 16, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s\nend)\n\n`;
+                script += `game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = ${ws}\n\n`;
+            }
+            if (jp && jp !== '50') {
+                script += `-- JumpPower\n`;
+                script += `Section:NewSlider("JumpPower", "Changes jump height", 500, 50, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s\nend)\n\n`;
+                script += `game.Players.LocalPlayer.Character.Humanoid.JumpPower = ${jp}\n\n`;
+            }
+            if (infJump) {
+                script += `-- Infinite Jump\n`;
+                script += `Section:NewToggle("Infinite Jump", "Jump in the air", function(state)\n    if state then\n        _G.InfJump = true\n        game:GetService("UserInputService").JumpRequest:Connect(function()\n            if _G.InfJump then\n                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")\n            end\n        end)\n    else\n        _G.InfJump = false\n    end\nend)\n\n`;
+            }
+            if (esp) {
+                script += `-- ESP\n`;
+                script += `Section:NewButton("Toggle ESP", "See players through walls", function()\n    loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()\nend)\n\n`;
+            }
+            if (aimbot) {
+                script += `-- Aimbot\n`;
+                script += `Section:NewButton("Load Aimbot", "Universal Aimbot", function()\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Main.lua"))()\nend)\n\n`;
+            }
+
+        } else if (game === 'bloxfruits') {
+            const autoFarm = document.getElementById('bfAutoFarm').checked;
+            const autoChest = document.getElementById('bfAutoChest').checked;
+            const weapon = document.getElementById('bfWeapon').value;
+            const espFruit = document.getElementById('bfEspFruit').checked;
+
+            if (autoFarm) {
+                script += `Section:NewToggle("Auto Farm Level", "Farms closest mobs", function(state)\n    _G.AutoFarm = state\n    while _G.AutoFarm do wait()\n        -- Auto Farm Logic Here\n        print("Farming with ${weapon}...")\n    end\nend)\n\n`;
+            }
+            if (autoChest) {
+                script += `Section:NewToggle("Auto Collect Chests", "Teleports to chests", function(state)\n    _G.AutoChest = state\nend)\n\n`;
+            }
+            if (espFruit) {
+                script += `Section:NewButton("ESP Fruits", "Locate fruits", function()\n    -- ESP Logic\nend)\n\n`;
+            }
+
+        } else if (game === 'dahood') {
+            const silentAim = document.getElementById('dhSilentAim').checked;
+            const autoStomp = document.getElementById('dhAutoStomp').checked;
+            const fly = document.getElementById('dhFly').checked;
+            const flySpeed = document.getElementById('dhFlySpeed').value;
+
+            if (silentAim) {
+                script += `Section:NewToggle("Silent Aim", "Hit shots automatically", function(state)\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/DaHoodScripts/SilentAim/main/source.lua"))()\nend)\n\n`;
+            }
+            if (fly) {
+                script += `Section:NewToggle("Fly", "Fly mode", function(state)\n    -- Fly Logic Speed: ${flySpeed}\nend)\n\n`;
+            }
+        }
+
+        script += `print("Quantum UI: Script Loaded Successfully!")`;
+
+        const output = document.getElementById('genOutput');
+        output.value = script;
+
+        // Add typing animation effect
+        output.style.opacity = '0.5';
+        setTimeout(() => output.style.opacity = '1', 200);
     }
 
     renderMarketplaceContent() {
@@ -1877,6 +2159,24 @@ class UserPortal {
                             style="width: 100%;"
                             oninput="window.userPortal.updateGlassOpacity(this.value)">
                     </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Audio Visualizer Background</label>
+                        <label class="switch">
+                            <input type="checkbox" id="visualizerToggle" ${localStorage.getItem('quantum_visualizer_enabled') !== 'false' ? 'checked' : ''} onchange="window.userPortal.toggleVisualizer(this.checked)">
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+                    <h3 style="margin-bottom: 15px;">Security</h3>
+                    <button class="btn-primary" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;" onclick="window.userPortal.resetHWID()">
+                        <i class="fas fa-shield-alt"></i> Reset HWID Binding
+                    </button>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">
+                        Allows you to use your key on a new device. Cooldown: 7 Days.
+                    </p>
                 </div>
 
                 <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
@@ -1889,6 +2189,110 @@ class UserPortal {
         localStorage.setItem('quantum_glass_opacity', value);
         const display = document.getElementById('glassOpacityValue');
         if (display) display.textContent = value;
+    }
+
+    toggleVisualizer(enabled) {
+        localStorage.setItem('quantum_visualizer_enabled', enabled);
+        const canvas = document.getElementById('audioVisualizer');
+        if (canvas) {
+            canvas.style.display = enabled ? 'block' : 'none';
+        }
+        if (enabled && this.isPlaying) {
+            this.drawVisualizer();
+        }
+    }
+
+    async resetHWID() {
+        if (!confirm("Are you sure you want to reset your HWID binding? This can only be done once every 7 days.")) return;
+
+        try {
+            const { data: keyData, error } = await this.supabase
+                .from('keys')
+                .select('*')
+                .eq('key', this.currentUser.key)
+                .single();
+
+            if (error) throw error;
+
+            const lastReset = keyData.last_hwid_reset ? new Date(keyData.last_hwid_reset).getTime() : 0;
+            const now = Date.now();
+            const cooldown = 7 * 24 * 60 * 60 * 1000;
+
+            if (now - lastReset < cooldown) {
+                const remaining = Math.ceil((cooldown - (now - lastReset)) / (1000 * 60 * 60 * 24));
+                alert(`Cooldown active. You can reset again in ${remaining} days.`);
+                return;
+            }
+
+            const { error: updateError } = await this.supabase
+                .from('keys')
+                .update({
+                    hwid: null,
+                    last_hwid_reset: new Date().toISOString()
+                })
+                .eq('key', this.currentUser.key);
+
+            if (updateError) throw updateError;
+
+            alert("HWID Reset Successful! You can now use your key on a new device.");
+            this.renderPortal(keyData); // Refresh UI
+        } catch (err) {
+            console.error("HWID Reset Error:", err);
+            alert("Failed to reset HWID: " + err.message);
+        }
+    }
+
+    async toggleKeyFreeze() {
+        try {
+            const { data: keyData, error } = await this.supabase
+                .from('keys')
+                .select('*')
+                .eq('key', this.currentUser.key)
+                .single();
+
+            if (error) throw error;
+
+            const isPaused = keyData.is_paused;
+            const now = new Date();
+
+            if (isPaused) {
+                // Resume
+                const pausedAt = new Date(keyData.paused_at).getTime();
+                const elapsed = now.getTime() - pausedAt;
+                const currentExpiry = new Date(keyData.expires_at).getTime();
+                const newExpiry = new Date(currentExpiry + elapsed).toISOString();
+
+                await this.supabase
+                    .from('keys')
+                    .update({
+                        is_paused: false,
+                        paused_at: null,
+                        expires_at: newExpiry
+                    })
+                    .eq('key', this.currentUser.key);
+
+                alert("Subscription Resumed! Expiry extended.");
+            } else {
+                // Pause
+                await this.supabase
+                    .from('keys')
+                    .update({
+                        is_paused: true,
+                        paused_at: now.toISOString()
+                    })
+                    .eq('key', this.currentUser.key);
+
+                alert("Subscription Paused. Your time is frozen.");
+            }
+
+            // Refresh Data
+            const { data: newData } = await this.supabase.from('keys').select('*').eq('key', this.currentUser.key).single();
+            this.renderPortal(newData);
+
+        } catch (err) {
+            console.error("Freeze Error:", err);
+            alert("Action failed: " + err.message);
+        }
     }
 
     saveProfile() {
