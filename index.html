@@ -96,47 +96,67 @@
                 </div>
                 <div class="premium-themes-title">Premium Themes ✨</div>
                 <div class="premium-grid">
-                    themeButtons.forEach(btn => {
-                    btn.addEventListener('click', () => {
+                    <button class="theme-btn" data-theme="fancy-gold">👑 Fancy Gold</button>
+                    <button class="theme-btn" data-theme="diamond">💎 Diamond</button>
+                </div>
+                <div class="premium-themes-title">Seasonal Themes 🎉</div>
+                <div class="seasonal-grid">
+                    <!-- Seasonal themes populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../background.js"></script>
+    <script src="../themes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="admin-keys.js"></script>
+    <script>
+        // Theme Switcher
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
                     const theme = btn.dataset.theme;
                     document.body.setAttribute('data-theme', theme);
                     themeButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     localStorage.setItem('quantum-theme', theme);
-                    });
-                    });
+                });
+            });
 
-                    // Load saved theme
-                    const savedTheme = localStorage.getItem('quantum-theme') || 'default';
-                    document.body.setAttribute('data-theme', savedTheme);
-                    const activeBtn = document.querySelector(`[data-theme="${savedTheme}"]`);
-                    if (activeBtn) {
-                    themeButtons.forEach(b => b.classList.remove('active'));
-                    activeBtn.classList.add('active');
-                    }
+            // Load saved theme
+            const savedTheme = localStorage.getItem('quantum-theme') || 'default';
+            document.body.setAttribute('data-theme', savedTheme);
+            const activeBtn = document.querySelector(`[data-theme="${savedTheme}"]`);
+            if (activeBtn) {
+                themeButtons.forEach(b => b.classList.remove('active'));
+                activeBtn.classList.add('active');
+            }
 
-                    try {
-                    window.themeManager = new ThemeManager();
-                    } catch (e) {
-                    console.error("Theme Manager Init Error:", e);
-                    }
-                    });
+            try {
+                window.themeManager = new ThemeManager();
+            } catch (e) {
+                console.error("Theme Manager Init Error:", e);
+            }
+        });
 
-                    // Global Error Handler
-                    window.onerror = function (msg, url, line, col, error) {
-                    const errorText = `Error: ${msg}\nLine: ${line}:${col}`;
-                    console.error(errorText);
+        // Global Error Handler
+        window.onerror = function (msg, url, line, col, error) {
+            const errorText = `Error: ${msg}\nLine: ${line}:${col}`;
+            console.error(errorText);
 
-                    if (msg.includes('Script error') || msg.includes('is not defined')) {
-                    console.log("Attempting auto-fix reload...");
-                    }
+            if (msg.includes('Script error') || msg.includes('is not defined')) {
+                console.log("Attempting auto-fix reload...");
+            }
 
-                    const loginError = document.getElementById('loginError');
-                    if (loginError) loginError.textContent = "System Error: " + msg;
+            const loginError = document.getElementById('loginError');
+            if (loginError) loginError.textContent = "System Error: " + msg;
 
-                    return false;
-                    };
-                    </script>
+            return false;
+        };
+    </script>
 </body>
 
 </html>
