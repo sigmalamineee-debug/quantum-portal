@@ -600,75 +600,32 @@ class UserPortal {
     }
 
     async copyDeviceHwid() {
-        navigator.clipboard.writeText(this.deviceHwid).then(() => {
+        try {
+            await navigator.clipboard.writeText(this.deviceHwid);
             this.showNotification('HWID copied to clipboard!', 'success');
-        });
-        // Supabase Integration
-        this.supabase = window.supabaseClient;
-        if (!this.supabase) {
-            this.showNotification('System Error: Database not connected', 'error');
-            return;
+        } catch (err) {
+            this.showNotification('Failed to copy HWID', 'error');
         }
+    }
 
-        const input = document.getElementById('keyInput');
-        const keyStr = input.value.trim();
+    previewUI() {
+        // Save current session data for the preview window
+        if (this.currentUser && this.currentUser.key) {
+            // Determine duration code based on expiry
+            let durationCode = '1D';
+            if (this.currentUser.key.expires_at) {
+                durationCode = 'LT';
+            } else {
+                localStorage.setItem('quantum_preview_mode', 'true');
+                localStorage.setItem('quantum_preview_user', this.currentUser.username);
+                localStorage.setItem('quantum_preview_expiry', this.currentUser.key.expires_at || 'LT');
 
-        if (!keyStr) {
-            this.showNotification('Please enter a key', 'error');
-            return;
-        }
-
-        // Fetch key from Supabase
-        const { data: keyData, error } = await this.supabase
-            .from('keys')
-            .select('*')
-            .eq('key', keyStr)
-            .single();
-
-        if (error || !keyData) {
-            this.showNotification('Invalid Key', 'error');
-            return;
-        }
-
-        if (keyData.status !== 'active') {
-            this.showNotification(`Key is ${keyData.status}`, 'warning');
-            return;
-        }
-
-        if (keyData.expires_at && Date.now() > parseInt(keyData.expires_at)) {
-            this.showNotification('Key is expired', 'error');
-            return;
-        }
-
-        if (keyData.hwid && keyData.hwid !== this.deviceHwid) {
-            this.showNotification('This key is HWID locked', 'error');
-            return;
-        }
-
-        // Bind HWID if not set
-        if (!keyData.hwid) {
-            const { error: updateError } = await this.supabase
-                .from('keys')
-                .update({ hwid: this.deviceHwid })
-                .eq('key', keyStr);
-
-            if (updateError) {
-                this.showNotification('Error binding HWID', 'error');
-                return;
+                if (!this.currentUser.key.expires_at) {
+                    localStorage.setItem('quantum_duration_code', 'LT');
+                }
             }
-            keyData.hwid = this.deviceHwid;
         }
-
-        this.currentUser = {
-            key: keyData.key,
-            loginTime: Date.now()
-        };
-
-        this.loadUserData(keyData.key);
-        this.saveUserData();
-
-        this.showNotification('Welcome back!', 'success');
-        this.renderPortal(keyData);
+        window.open('index2.html', '_blank');
     }
 
     renderPortal(keyData) {
