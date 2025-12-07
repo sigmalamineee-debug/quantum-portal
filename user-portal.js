@@ -1,6 +1,11 @@
 
 class UserPortal {
     constructor() {
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://ausifkhslbkvgyskwrps.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1c2lma2hzbGJrdmd5c2t3cnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMTA2NjYsImV4cCI6MjA4MDU4NjY2Nn0.yovv7wZKSZaykq2Hms6UWvFYy30LUXy68qEAHu5MU3c';
+        this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
         this.currentUser = JSON.parse(localStorage.getItem('user_auth_session')) || null;
         this.allUserData = JSON.parse(localStorage.getItem('quantum_user_data_store')) || {};
@@ -608,8 +613,7 @@ class UserPortal {
         window.open('index2.html', '_blank');
     }
 
-    handleLogin() {
-        this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
+    async handleLogin() {
         const input = document.getElementById('keyInput');
         const keyStr = input.value.trim();
 
@@ -618,9 +622,14 @@ class UserPortal {
             return;
         }
 
-        const keyData = this.keys.find(k => k.key === keyStr);
+        // Fetch key from Supabase
+        const { data: keyData, error } = await this.supabase
+            .from('keys')
+            .select('*')
+            .eq('key', keyStr)
+            .single();
 
-        if (!keyData) {
+        if (error || !keyData) {
             this.showNotification('Invalid Key', 'error');
             return;
         }
@@ -641,12 +650,13 @@ class UserPortal {
         }
 
         if (!keyData.hwid) {
+            // Update HWID in Supabase
+            await this.supabase
+                .from('keys')
+                .update({ hwid: this.deviceHwid })
+                .eq('key', keyData.key);
+
             keyData.hwid = this.deviceHwid;
-            const keyIndex = this.keys.findIndex(k => k.key === keyData.key);
-            if (keyIndex !== -1) {
-                this.keys[keyIndex] = keyData;
-                localStorage.setItem('admin_keys', JSON.stringify(this.keys));
-            }
         }
 
         this.currentUser = {
