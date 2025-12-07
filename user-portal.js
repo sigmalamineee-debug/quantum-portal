@@ -785,23 +785,11 @@ class UserPortal {
         let timeRemaining = 'Lifetime';
         if (keyData.expires_at) {
             const diff = parseInt(keyData.expires_at) - Date.now();
-            timeRemaining = diff > 0 ? `${Math.floor(diff / (1000 * 60 * 60 * 24))} Days` : 'Expired';
-        }
-
-        return `
-            <h2 style="margin-bottom: 20px;">Dashboard</h2>
-            
-            <div class="status-widget glass-card" style="margin-bottom: 25px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--success);">
-                <div>
-                    <h4 style="margin-bottom: 5px;">System Status</h4>
-                    <p style="font-size: 12px; color: var(--text-secondary);">All systems operational</p>
-                </div>
-                <div style="text-align: right;">
                     <div style="color: var(--success); font-weight: bold; font-size: 14px;"><i class="fas fa-check-circle"></i> UNDETECTED</div>
                     <div style="font-size: 10px; color: var(--text-secondary);">Last updated: Just now</div>
                     <div style="font-size: 10px; color: var(--accent-color); margin-top: 2px;"><i class="fas fa-wifi"></i> WebSocket: Connected</div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             <div class="stats-grid">
                 <div class="stat-card">
@@ -840,7 +828,7 @@ class UserPortal {
                 </div>
             </div>
 
-            <!-- Community Poll -->
+            <!--Community Poll-- >
             <div class="glass-card" style="margin-top: 20px; padding: 20px;">
                 <h3 style="margin-bottom: 15px;"><i class="fas fa-poll"></i> Community Poll</h3>
                 <p style="margin-bottom: 15px; color: var(--text-secondary);">${this.pollData.question}</p>
@@ -873,36 +861,36 @@ class UserPortal {
                     </button>
                 </div>
             </div>
-        `;
+            `;
     }
 
     renderMusicContent() {
         if (!this.spotifyConnected) {
             return `
-                <h2 style="margin-bottom: 20px;">Music</h2>
-                <div class="glass-card" style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <i class="fab fa-spotify" style="font-size: 64px; color: #1DB954; margin-bottom: 20px;"></i>
-                    <h3 style="margin-bottom: 10px;">Connect to Spotify</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 30px; max-width: 400px;">
-                        Connect your Spotify account to listen to your favorite playlists directly within the Quantum Portal.
-                    </p>
-                    <button class="btn-primary" style="background: #1DB954; width: auto; padding: 12px 30px; font-weight: bold; border-radius: 30px;" onclick="window.userPortal.connectSpotify()">
-                        Connect Spotify
-                    </button>
-                </div>
+                < h2 style = "margin-bottom: 20px;" > Music</h2 >
+                    <div class="glass-card" style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fab fa-spotify" style="font-size: 64px; color: #1DB954; margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 10px;">Connect to Spotify</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 30px; max-width: 400px;">
+                            Connect your Spotify account to listen to your favorite playlists directly within the Quantum Portal.
+                        </p>
+                        <button class="btn-primary" style="background: #1DB954; width: auto; padding: 12px 30px; font-weight: bold; border-radius: 30px;" onclick="window.userPortal.connectSpotify()">
+                            Connect Spotify
+                        </button>
+                    </div>
             `;
         }
 
         const currentTrack = this.playlist[this.currentTrackIndex] || this.playlist[0];
 
         return `
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                < div style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;" >
                 <h2 style="margin: 0;">Music</h2>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <a href="https://soundcloud.com" target="_blank" style="color: #ff5500; text-decoration: none; font-size: 24px;"><i class="fab fa-soundcloud"></i></a>
                     <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png" alt="Spotify" style="height: 24px;">
                 </div>
-            </div>
+            </div >
             
             <div class="glass-card" style="padding: 20px;">
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
@@ -972,7 +960,7 @@ class UserPortal {
                 .playing-indicator span:nth-child(3) { height: 40%; animation-delay: 0.4s; }
                 @keyframes bounce { 0%, 100% { height: 20%; } 50% { height: 100%; } }
             </style>
-        `;
+            `;
     }
 
     handleSearch(query) {
@@ -999,185 +987,185 @@ class UserPortal {
 
                 fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`)
                     .then(res => res.json())
-                    .then(data => {
-                        let results = [];
-                        if (data.results) {
-                            results = data.results.map(item => ({
-                                title: item.trackName,
-                                artist: item.artistName,
-                                url: item.previewUrl,
-                                cover: item.artworkUrl100.replace('100x100', '300x300')
-                            }));
-                        }
-                        // Prepend our hardcoded song
-                        results.unshift(blackedOutSong);
-                        this.playlist = results;
-                        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-                    })
-                    .catch(err => {
-                        this.playlist = [blackedOutSong];
-                        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-                    });
-                return;
-            }
-
-            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`)
-                .then(res => res.json())
                 .then(data => {
-                    if (data.results && data.results.length > 0) {
-                        this.playlist = data.results.map(item => ({
+                    let results = [];
+                    if (data.results) {
+                        results = data.results.map(item => ({
                             title: item.trackName,
                             artist: item.artistName,
                             url: item.previewUrl,
                             cover: item.artworkUrl100.replace('100x100', '300x300')
                         }));
-                        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-
-                        // Keep focus
-                        setTimeout(() => {
-                            const input = document.querySelector('input[placeholder="Search for any song..."]');
-                            if (input) {
-                                input.focus();
-                                input.setSelectionRange(input.value.length, input.value.length);
-                            }
-                        }, 0);
                     }
+                    // Prepend our hardcoded song
+                    results.unshift(blackedOutSong);
+                    this.playlist = results;
+                    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
                 })
-                .catch(err => console.error('Search failed:', err));
-        }, 500);
-    }
-
-    toggleLyrics() {
-        this.showLyrics = !this.showLyrics;
-        if (this.showLyrics) {
-            this.fetchLyrics();
-        }
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-    }
-
-    fetchLyrics() {
-        const track = this.playlist[this.currentTrackIndex];
-        if (!track) return;
-
-        // Check local DB first
-        if (this.lyricsDB[track.title]) {
-            this.currentLyrics = this.lyricsDB[track.title];
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+                .catch(err => {
+                    this.playlist = [blackedOutSong];
+                    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+                });
             return;
         }
 
-        this.currentLyrics = "Loading lyrics...";
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-
-        // Timeout promise
-        const timeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout")), 3000)
-        );
-
-        // Fetch promise
-        const fetchPromise = fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(track.artist)}/${encodeURIComponent(track.title)}`)
-            .then(res => res.json());
-
-        Promise.race([fetchPromise, timeout])
+        fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`)
+            .then(res => res.json())
             .then(data => {
-                if (data.lyrics) {
-                    this.currentLyrics = data.lyrics;
-                } else {
-                    this.currentLyrics = "Lyrics not found for this song.";
+                if (data.results && data.results.length > 0) {
+                    this.playlist = data.results.map(item => ({
+                        title: item.trackName,
+                        artist: item.artistName,
+                        url: item.previewUrl,
+                        cover: item.artworkUrl100.replace('100x100', '300x300')
+                    }));
+                    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+
+                    // Keep focus
+                    setTimeout(() => {
+                        const input = document.querySelector('input[placeholder="Search for any song..."]');
+                        if (input) {
+                            input.focus();
+                            input.setSelectionRange(input.value.length, input.value.length);
+                        }
+                    }, 0);
                 }
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
             })
-            .catch(err => {
-                this.currentLyrics = "Lyrics unavailable (API Error or Timeout).";
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            });
+            .catch(err => console.error('Search failed:', err));
+    }, 500);
+}
+
+toggleLyrics() {
+    this.showLyrics = !this.showLyrics;
+    if (this.showLyrics) {
+        this.fetchLyrics();
     }
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+}
 
-    startVisualizer() {
-        const canvas = document.getElementById('visualizerCanvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+fetchLyrics() {
+    const track = this.playlist[this.currentTrackIndex];
+    if (!track) return;
 
-        if (this.visualizerInterval) clearInterval(this.visualizerInterval);
-
-        this.visualizerInterval = setInterval(() => {
-            if (!this.isPlaying) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                return;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const bars = 30;
-            const barWidth = canvas.width / bars;
-
-            for (let i = 0; i < bars; i++) {
-                const height = Math.random() * 50 + 10; // Random height for wave
-                const x = i * barWidth;
-                const y = canvas.height - height;
-
-                ctx.fillStyle = '#1DB954';
-                ctx.fillRect(x, y, barWidth - 2, height);
-            }
-        }, 100);
-    }
-
-    stopVisualizer() {
-        if (this.visualizerInterval) clearInterval(this.visualizerInterval);
-    }
-
-    togglePlay() {
-        if (this.isPlaying) {
-            this.audioPlayer.pause();
-        } else {
-            this.audioPlayer.play();
-        }
-        this.isPlaying = !this.isPlaying;
+    // Check local DB first
+    if (this.lyricsDB[track.title]) {
+        this.currentLyrics = this.lyricsDB[track.title];
         this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        return;
     }
 
-    toggleLoop() {
-        this.isLooping = !this.isLooping;
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-    }
+    this.currentLyrics = "Loading lyrics...";
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
 
-    playTrack(index) {
-        this.currentTrackIndex = index;
-        const track = this.playlist[index];
-        if (track && track.url) {
-            // Initialize Visualizer on first play
-            if (!this.audioContext) {
-                this.initVisualizer();
+    // Timeout promise
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 3000)
+    );
+
+    // Fetch promise
+    const fetchPromise = fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(track.artist)}/${encodeURIComponent(track.title)}`)
+        .then(res => res.json());
+
+    Promise.race([fetchPromise, timeout])
+        .then(data => {
+            if (data.lyrics) {
+                this.currentLyrics = data.lyrics;
+            } else {
+                this.currentLyrics = "Lyrics not found for this song.";
             }
-
-            this.audioPlayer.src = track.url;
-            this.audioPlayer.play().catch(e => console.log("Playback failed:", e));
-            this.isPlaying = true;
-
-            // Reset lyrics if changing track
-            if (this.showLyrics) {
-                this.fetchLyrics();
-            }
-
             this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        })
+        .catch(err => {
+            this.currentLyrics = "Lyrics unavailable (API Error or Timeout).";
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        });
+}
+
+startVisualizer() {
+    const canvas = document.getElementById('visualizerCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (this.visualizerInterval) clearInterval(this.visualizerInterval);
+
+    this.visualizerInterval = setInterval(() => {
+        if (!this.isPlaying) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
         }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const bars = 30;
+        const barWidth = canvas.width / bars;
+
+        for (let i = 0; i < bars; i++) {
+            const height = Math.random() * 50 + 10; // Random height for wave
+            const x = i * barWidth;
+            const y = canvas.height - height;
+
+            ctx.fillStyle = '#1DB954';
+            ctx.fillRect(x, y, barWidth - 2, height);
+        }
+    }, 100);
+}
+
+stopVisualizer() {
+    if (this.visualizerInterval) clearInterval(this.visualizerInterval);
+}
+
+togglePlay() {
+    if (this.isPlaying) {
+        this.audioPlayer.pause();
+    } else {
+        this.audioPlayer.play();
     }
+    this.isPlaying = !this.isPlaying;
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+}
 
-    initVisualizer() {
-        try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            this.source = this.audioContext.createMediaElementSource(this.audioPlayer);
-            this.source.connect(this.analyser);
-            this.analyser.connect(this.audioContext.destination);
-            this.analyser.fftSize = 256;
-            this.bufferLength = this.analyser.frequencyBinCount;
-            this.dataArray = new Uint8Array(this.bufferLength);
+toggleLoop() {
+    this.isLooping = !this.isLooping;
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+}
 
-            // Create Background Canvas
-            if (!document.getElementById('audioVisualizer')) {
-                const canvas = document.createElement('canvas');
-                canvas.id = 'audioVisualizer';
-                canvas.style.cssText = `
+playTrack(index) {
+    this.currentTrackIndex = index;
+    const track = this.playlist[index];
+    if (track && track.url) {
+        // Initialize Visualizer on first play
+        if (!this.audioContext) {
+            this.initVisualizer();
+        }
+
+        this.audioPlayer.src = track.url;
+        this.audioPlayer.play().catch(e => console.log("Playback failed:", e));
+        this.isPlaying = true;
+
+        // Reset lyrics if changing track
+        if (this.showLyrics) {
+            this.fetchLyrics();
+        }
+
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    }
+}
+
+initVisualizer() {
+    try {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        this.source = this.audioContext.createMediaElementSource(this.audioPlayer);
+        this.source.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+        this.analyser.fftSize = 256;
+        this.bufferLength = this.analyser.frequencyBinCount;
+        this.dataArray = new Uint8Array(this.bufferLength);
+
+        // Create Background Canvas
+        if (!document.getElementById('audioVisualizer')) {
+            const canvas = document.createElement('canvas');
+            canvas.id = 'audioVisualizer';
+            canvas.style.cssText = `
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -1187,69 +1175,69 @@ class UserPortal {
                     pointer-events: none;
                     opacity: 0.5;
                 `;
-                document.body.insertBefore(canvas, document.body.firstChild);
-                this.visualizerCanvas = canvas;
-                this.visualizerCtx = canvas.getContext('2d');
-            }
-
-            this.drawVisualizer();
-        } catch (e) {
-            console.error("Visualizer init failed:", e);
+            document.body.insertBefore(canvas, document.body.firstChild);
+            this.visualizerCanvas = canvas;
+            this.visualizerCtx = canvas.getContext('2d');
         }
+
+        this.drawVisualizer();
+    } catch (e) {
+        console.error("Visualizer init failed:", e);
     }
+}
 
-    drawVisualizer() {
-        if (!this.visualizerCtx || !this.analyser) return;
+drawVisualizer() {
+    if (!this.visualizerCtx || !this.analyser) return;
 
-        requestAnimationFrame(() => this.drawVisualizer());
+    requestAnimationFrame(() => this.drawVisualizer());
 
-        this.analyser.getByteFrequencyData(this.dataArray);
+    this.analyser.getByteFrequencyData(this.dataArray);
 
-        const canvas = this.visualizerCanvas;
-        const ctx = this.visualizerCtx;
-        const width = canvas.width = window.innerWidth;
-        const height = canvas.height = window.innerHeight;
+    const canvas = this.visualizerCanvas;
+    const ctx = this.visualizerCtx;
+    const width = canvas.width = window.innerWidth;
+    const height = canvas.height = window.innerHeight;
 
-        ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
-        const barWidth = (width / this.bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
+    const barWidth = (width / this.bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
 
-        for (let i = 0; i < this.bufferLength; i++) {
-            barHeight = this.dataArray[i] * 2; // Scale up
+    for (let i = 0; i < this.bufferLength; i++) {
+        barHeight = this.dataArray[i] * 2; // Scale up
 
-            // Dynamic Color based on theme accent or rainbow
-            const r = barHeight + (25 * (i / this.bufferLength));
-            const g = 250 * (i / this.bufferLength);
-            const b = 50;
+        // Dynamic Color based on theme accent or rainbow
+        const r = barHeight + (25 * (i / this.bufferLength));
+        const g = 250 * (i / this.bufferLength);
+        const b = 50;
 
-            ctx.fillStyle = `rgba(${r},${g},${b}, 0.5)`;
-            ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+        ctx.fillStyle = `rgba(${r},${g},${b}, 0.5)`;
+        ctx.fillRect(x, height - barHeight, barWidth, barHeight);
 
-            x += barWidth + 1;
-        }
+        x += barWidth + 1;
     }
+}
 
-    nextTrack() {
-        this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
-        this.playTrack(this.currentTrackIndex);
-    }
+nextTrack() {
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+    this.playTrack(this.currentTrackIndex);
+}
 
-    prevTrack() {
-        this.currentTrackIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
-        this.playTrack(this.currentTrackIndex);
-    }
+prevTrack() {
+    this.currentTrackIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
+    this.playTrack(this.currentTrackIndex);
+}
 
-    connectSpotify() {
-        // Simulate OAuth Popup
-        const width = 450;
-        const height = 730;
-        const left = (screen.width / 2) - (width / 2);
-        const top = (screen.height / 2) - (height / 2);
+connectSpotify() {
+    // Simulate OAuth Popup
+    const width = 450;
+    const height = 730;
+    const left = (screen.width / 2) - (width / 2);
+    const top = (screen.height / 2) - (height / 2);
 
-        const win = window.open('', 'Spotify Login', `width=${width},height=${height},top=${top},left=${left}`);
-        win.document.write(`
+    const win = window.open('', 'Spotify Login', `width=${width},height=${height},top=${top},left=${left}`);
+    win.document.write(`
             <html>
                 <body style="background: #191414; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;">
                     <h2 style="margin-bottom: 20px;">Spotify</h2>
@@ -1260,35 +1248,35 @@ class UserPortal {
             </html>
         `);
 
-        setTimeout(() => {
-            win.close();
-            this.spotifyConnected = true;
-            this.saveUserData();
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            this.showNotification('Spotify Connected Successfully!', 'success');
-        }, 2000);
-    }
-
-    disconnectSpotify() {
-        this.spotifyConnected = false;
-        this.audioPlayer.pause();
-        this.isPlaying = false;
+    setTimeout(() => {
+        win.close();
+        this.spotifyConnected = true;
         this.saveUserData();
         this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        this.showNotification('Spotify Disconnected', 'info');
-    }
+        this.showNotification('Spotify Connected Successfully!', 'success');
+    }, 2000);
+}
 
-    renderChatContent() {
-        // Start auto-refresh for chat
-        this.startChatAutoRefresh();
+disconnectSpotify() {
+    this.spotifyConnected = false;
+    this.audioPlayer.pause();
+    this.isPlaying = false;
+    this.saveUserData();
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    this.showNotification('Spotify Disconnected', 'info');
+}
 
-        // Auto-scroll to bottom logic needs to be handled after render
-        setTimeout(() => {
-            const chatBox = document.getElementById('chatBox');
-            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-        }, 0);
+renderChatContent() {
+    // Start auto-refresh for chat
+    this.startChatAutoRefresh();
 
-        return `
+    // Auto-scroll to bottom logic needs to be handled after render
+    setTimeout(() => {
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    }, 0);
+
+    return `
             <h2 style="margin-bottom: 20px;">Global Chat</h2>
             <div class="glass-card" style="height: 400px; display: flex; flex-direction: column; padding: 0;">
                 <div id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -1315,276 +1303,276 @@ class UserPortal {
                 </div>
             ` : ''}
         `;
-    }
+}
 
     async initChat() {
-        if (!this.supabase) return;
+    if (!this.supabase) return;
 
-        // Fetch initial messages
-        const { data, error } = await this.supabase
-            .from('chat_messages')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
+    // Fetch initial messages
+    const { data, error } = await this.supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-        if (data) {
-            this.chatMessages = data.reverse().map(m => ({
+    if (data) {
+        this.chatMessages = data.reverse().map(m => ({
+            user: m.username,
+            rank: m.rank,
+            msg: m.message,
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }));
+        // Add connection success message locally
+        this.chatMessages.push({
+            user: 'System',
+            rank: 'System',
+            msg: 'Connected to Global Chat. Fetched ' + data.length + ' messages.',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        this.refreshChatDisplay();
+    } else if (error) {
+        console.error('Chat Init Error:', error);
+        this.chatMessages.push({
+            user: 'System',
+            rank: 'Error',
+            msg: 'Failed to connect: ' + error.message + '. Check RLS policies.',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        this.refreshChatDisplay();
+    }
+
+    // Subscribe to new messages
+    this.supabase
+        .channel('public:chat_messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+            const m = payload.new;
+            const msg = {
                 user: m.username,
                 rank: m.rank,
                 msg: m.message,
                 time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }));
-            // Add connection success message locally
-            this.chatMessages.push({
-                user: 'System',
-                rank: 'System',
-                msg: 'Connected to Global Chat. Fetched ' + data.length + ' messages.',
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+            };
+            this.chatMessages.push(msg);
+            if (this.chatMessages.length > 50) this.chatMessages.shift(); // Keep last 50
             this.refreshChatDisplay();
-        } else if (error) {
-            console.error('Chat Init Error:', error);
-            this.chatMessages.push({
-                user: 'System',
-                rank: 'Error',
-                msg: 'Failed to connect: ' + error.message + '. Check RLS policies.',
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-            this.refreshChatDisplay();
-        }
+        })
+        .subscribe();
+}
 
-        // Subscribe to new messages
-        this.supabase
-            .channel('public:chat_messages')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
-                const m = payload.new;
-                const msg = {
-                    user: m.username,
-                    rank: m.rank,
-                    msg: m.message,
-                    time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
-                this.chatMessages.push(msg);
-                if (this.chatMessages.length > 50) this.chatMessages.shift(); // Keep last 50
-                this.refreshChatDisplay();
-            })
-            .subscribe();
+sendChatMessage() {
+    // Ban Check
+    const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+    if (blacklist.includes(this.currentUser.username)) {
+        this.showNotification('You are banned and cannot chat.', 'error');
+        return;
     }
 
-    sendChatMessage() {
-        // Ban Check
-        const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
-        if (blacklist.includes(this.currentUser.username)) {
-            this.showNotification('You are banned and cannot chat.', 'error');
-            return;
-        }
+    // Mute Check
+    const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
+    if (muted.includes(this.currentUser.username)) {
+        this.showNotification('You are muted.', 'error');
+        return;
+    }
 
-        // Mute Check
-        const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
-        if (muted.includes(this.currentUser.username)) {
-            this.showNotification('You are muted.', 'error');
-            return;
-        }
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
 
-        const input = document.getElementById('chatInput');
-        const msg = input.value.trim();
-        if (!msg) return;
+    const allowedCommandRanks = ['Founder', 'Developer'];
+    const isCommandUser = allowedCommandRanks.includes(this.rank);
 
-        const allowedCommandRanks = ['Founder', 'Developer'];
-        const isCommandUser = allowedCommandRanks.includes(this.rank);
-
-        // Command Handling
-        if (isCommandUser && msg.startsWith('/')) {
-            this.handleOwnerCommand(msg);
-            input.value = '';
-            return;
-        }
-
-        if (isCommandUser && msg.startsWith('@everyone')) {
-            this.addChatMessage(this.currentUser.username, this.rank, `<span style="color: #ff4444; font-weight: bold; background: rgba(255,0,0,0.1); padding: 2px 5px; border-radius: 4px;">@everyone</span> ${msg.replace('@everyone', '')}`);
-            input.value = '';
-            return;
-        }
-
-        this.addChatMessage(this.currentUser.username || 'User', this.rank, msg);
-        this.addXP(10); // Give 10 XP per message
+    // Command Handling
+    if (isCommandUser && msg.startsWith('/')) {
+        this.handleOwnerCommand(msg);
         input.value = '';
+        return;
     }
 
-    handleOwnerCommand(cmd) {
-        const parts = cmd.split(' ');
-        const command = parts[0];
-        const args = parts.slice(1);
+    if (isCommandUser && msg.startsWith('@everyone')) {
+        this.addChatMessage(this.currentUser.username, this.rank, `<span style="color: #ff4444; font-weight: bold; background: rgba(255,0,0,0.1); padding: 2px 5px; border-radius: 4px;">@everyone</span> ${msg.replace('@everyone', '')}`);
+        input.value = '';
+        return;
+    }
 
-        // Check if command exists
-        if (!this.commands[command]) {
-            return this.showNotification('Unknown command', 'error');
-        }
+    this.addChatMessage(this.currentUser.username || 'User', this.rank, msg);
+    this.addXP(10); // Give 10 XP per message
+    input.value = '';
+}
 
-        // Check Permissions
-        const requiredRank = this.commands[command].rank;
-        const userPriority = this.rankDefinitions[this.rank].priority;
-        const requiredPriority = this.rankDefinitions[requiredRank].priority;
+handleOwnerCommand(cmd) {
+    const parts = cmd.split(' ');
+    const command = parts[0];
+    const args = parts.slice(1);
 
-        if (userPriority < requiredPriority) {
-            return this.showNotification(`Permission Denied. Requires ${requiredRank}+`, 'error');
-        }
+    // Check if command exists
+    if (!this.commands[command]) {
+        return this.showNotification('Unknown command', 'error');
+    }
 
-        // Execute Command
-        if (command === '/givekey') {
-            const newKey = 'QTM_GIFT_' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            this.keys.push({
-                key: newKey,
-                status: 'active',
-                expiresAt: Date.now() + (24 * 60 * 60 * 1000),
-                hwid: null,
-                createdAt: Date.now()
-            });
-            localStorage.setItem('admin_keys', JSON.stringify(this.keys));
-            this.addChatMessage('System', 'Bot', `🎁 <strong>GIFT KEY DROP!</strong> First to claim: <code style="user-select: all; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;">${newKey}</code>`);
-            this.showNotification('Key generated!', 'success');
+    // Check Permissions
+    const requiredRank = this.commands[command].rank;
+    const userPriority = this.rankDefinitions[this.rank].priority;
+    const requiredPriority = this.rankDefinitions[requiredRank].priority;
 
-        } else if (command === '/setrank') {
-            const newRank = args[0];
-            if (newRank && this.rankDefinitions[newRank]) {
-                this.rank = newRank;
-                this.saveUserData();
-                this.showNotification(`Rank updated to ${newRank}`, 'success');
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            } else {
-                this.showNotification('Invalid Rank Name', 'error');
-            }
+    if (userPriority < requiredPriority) {
+        return this.showNotification(`Permission Denied. Requires ${requiredRank}+`, 'error');
+    }
 
-        } else if (command === '/kick') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /kick [username]', 'error');
+    // Execute Command
+    if (command === '/givekey') {
+        const newKey = 'QTM_GIFT_' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        this.keys.push({
+            key: newKey,
+            status: 'active',
+            expiresAt: Date.now() + (24 * 60 * 60 * 1000),
+            hwid: null,
+            createdAt: Date.now()
+        });
+        localStorage.setItem('admin_keys', JSON.stringify(this.keys));
+        this.addChatMessage('System', 'Bot', `🎁 <strong>GIFT KEY DROP!</strong> First to claim: <code style="user-select: all; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;">${newKey}</code>`);
+        this.showNotification('Key generated!', 'success');
 
-            const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
-            kicked.push(target);
-            localStorage.setItem('quantum_kicked_users', JSON.stringify(kicked));
-
-            this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
-
-        } else if (command === '/unkick') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /unkick [username]', 'error');
-
-            const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
-            const newKicked = kicked.filter(u => u !== target);
-            localStorage.setItem('quantum_kicked_users', JSON.stringify(newKicked));
-
-            this.showNotification(`Unkicked ${target}`, 'success');
-
-        } else if (command === '/ban') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /ban [username]', 'error');
-
-            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
-            if (!blacklist.includes(target)) {
-                blacklist.push(target);
-                localStorage.setItem('quantum_blacklist', JSON.stringify(blacklist));
-            }
-
-            this.addChatMessage('System', 'Console', `🔨 <strong>${target}</strong> has been BANNED from the server.`);
-
-        } else if (command === '/unban') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /unban [username]', 'error');
-
-            const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
-            const newBlacklist = blacklist.filter(u => u !== target);
-            localStorage.setItem('quantum_blacklist', JSON.stringify(newBlacklist));
-
-            this.showNotification(`Unbanned ${target}`, 'success');
-
-        } else if (command === '/mute') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /mute [username]', 'error');
-
-            const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
-            if (!muted.includes(target)) {
-                muted.push(target);
-                localStorage.setItem('quantum_muted_users', JSON.stringify(muted));
-            }
-
-            this.addChatMessage('System', 'Console', `🔇 <strong>${target}</strong> has been muted.`);
-
-        } else if (command === '/warn') {
-            const target = args[0];
-            if (!target) return this.showNotification('Usage: /warn [username]', 'error');
-
-            const warnings = JSON.parse(localStorage.getItem('quantum_warnings') || '{}');
-            if (!warnings[target]) warnings[target] = 0;
-            warnings[target]++;
-            localStorage.setItem('quantum_warnings', JSON.stringify(warnings));
-
-            this.addChatMessage('System', 'Console', `⚠️ <strong>${target}</strong> has been warned. (Total: ${warnings[target]})`);
-
-        } else if (command === '/announce') {
-            const msg = args.join(' ');
-            if (!msg) return this.showNotification('Usage: /announce [msg]', 'error');
-            this.announcement = msg;
+    } else if (command === '/setrank') {
+        const newRank = args[0];
+        if (newRank && this.rankDefinitions[newRank]) {
+            this.rank = newRank;
+            this.saveUserData();
+            this.showNotification(`Rank updated to ${newRank}`, 'success');
             this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            this.addChatMessage('System', 'Announcement', `📢 <strong>ANNOUNCEMENT:</strong> ${msg}`);
-
-        } else if (command === '/clear') {
-            this.chatMessages = [];
-            localStorage.setItem('quantum_global_chat', JSON.stringify([]));
-            this.refreshChatDisplay();
-            this.showNotification('Chat cleared', 'success');
-        }
-    }
-
-    addXP(amount) {
-        if (!this.currentUser.xp) this.currentUser.xp = 0;
-        if (!this.currentUser.level) this.currentUser.level = 1;
-
-        this.currentUser.xp += amount;
-
-        // Level Formula: Level = sqrt(XP / 100)
-        const newLevel = Math.floor(Math.sqrt(this.currentUser.xp / 100)) || 1;
-
-        if (newLevel > this.currentUser.level) {
-            this.currentUser.level = newLevel;
-            this.showNotification(`🎉 Level Up! You are now Level ${newLevel}`, 'success');
-            this.addChatMessage('System', 'Bot', `🎉 <strong>${this.currentUser.username}</strong> reached <strong>Level ${newLevel}</strong>!`);
-
-            // Play sound
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => { });
+        } else {
+            this.showNotification('Invalid Rank Name', 'error');
         }
 
-        this.saveUserData();
+    } else if (command === '/kick') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /kick [username]', 'error');
+
+        const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
+        kicked.push(target);
+        localStorage.setItem('quantum_kicked_users', JSON.stringify(kicked));
+
+        this.addChatMessage('System', 'Console', `🚫 <strong>${target}</strong> has been kicked from the server.`);
+
+    } else if (command === '/unkick') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /unkick [username]', 'error');
+
+        const kicked = JSON.parse(localStorage.getItem('quantum_kicked_users') || '[]');
+        const newKicked = kicked.filter(u => u !== target);
+        localStorage.setItem('quantum_kicked_users', JSON.stringify(newKicked));
+
+        this.showNotification(`Unkicked ${target}`, 'success');
+
+    } else if (command === '/ban') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /ban [username]', 'error');
+
+        const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+        if (!blacklist.includes(target)) {
+            blacklist.push(target);
+            localStorage.setItem('quantum_blacklist', JSON.stringify(blacklist));
+        }
+
+        this.addChatMessage('System', 'Console', `🔨 <strong>${target}</strong> has been BANNED from the server.`);
+
+    } else if (command === '/unban') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /unban [username]', 'error');
+
+        const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
+        const newBlacklist = blacklist.filter(u => u !== target);
+        localStorage.setItem('quantum_blacklist', JSON.stringify(newBlacklist));
+
+        this.showNotification(`Unbanned ${target}`, 'success');
+
+    } else if (command === '/mute') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /mute [username]', 'error');
+
+        const muted = JSON.parse(localStorage.getItem('quantum_muted_users') || '[]');
+        if (!muted.includes(target)) {
+            muted.push(target);
+            localStorage.setItem('quantum_muted_users', JSON.stringify(muted));
+        }
+
+        this.addChatMessage('System', 'Console', `🔇 <strong>${target}</strong> has been muted.`);
+
+    } else if (command === '/warn') {
+        const target = args[0];
+        if (!target) return this.showNotification('Usage: /warn [username]', 'error');
+
+        const warnings = JSON.parse(localStorage.getItem('quantum_warnings') || '{}');
+        if (!warnings[target]) warnings[target] = 0;
+        warnings[target]++;
+        localStorage.setItem('quantum_warnings', JSON.stringify(warnings));
+
+        this.addChatMessage('System', 'Console', `⚠️ <strong>${target}</strong> has been warned. (Total: ${warnings[target]})`);
+
+    } else if (command === '/announce') {
+        const msg = args.join(' ');
+        if (!msg) return this.showNotification('Usage: /announce [msg]', 'error');
+        this.announcement = msg;
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        this.addChatMessage('System', 'Announcement', `📢 <strong>ANNOUNCEMENT:</strong> ${msg}`);
+
+    } else if (command === '/clear') {
+        this.chatMessages = [];
+        localStorage.setItem('quantum_global_chat', JSON.stringify([]));
+        this.refreshChatDisplay();
+        this.showNotification('Chat cleared', 'success');
     }
+}
+
+addXP(amount) {
+    if (!this.currentUser.xp) this.currentUser.xp = 0;
+    if (!this.currentUser.level) this.currentUser.level = 1;
+
+    this.currentUser.xp += amount;
+
+    // Level Formula: Level = sqrt(XP / 100)
+    const newLevel = Math.floor(Math.sqrt(this.currentUser.xp / 100)) || 1;
+
+    if (newLevel > this.currentUser.level) {
+        this.currentUser.level = newLevel;
+        this.showNotification(`🎉 Level Up! You are now Level ${newLevel}`, 'success');
+        this.addChatMessage('System', 'Bot', `🎉 <strong>${this.currentUser.username}</strong> reached <strong>Level ${newLevel}</strong>!`);
+
+        // Play sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => { });
+    }
+
+    this.saveUserData();
+}
 
     async addChatMessage(user, rank, msg) {
-        if (!this.supabase) return;
+    if (!this.supabase) return;
 
-        const newMessage = {
-            username: user,
-            rank: rank,
-            message: msg
-        };
+    const newMessage = {
+        username: user,
+        rank: rank,
+        message: msg
+    };
 
-        const { error } = await this.supabase
-            .from('chat_messages')
-            .insert([newMessage]);
+    const { error } = await this.supabase
+        .from('chat_messages')
+        .insert([newMessage]);
 
-        if (error) {
-            console.error('Error sending message:', error);
-            this.showNotification('Failed to send message', 'error');
-        }
+    if (error) {
+        console.error('Error sending message:', error);
+        this.showNotification('Failed to send message', 'error');
     }
+}
 
-    refreshChatDisplay() {
-        // Only refresh the chat box, not the entire portal
-        const chatBox = document.getElementById('chatBox');
-        if (!chatBox) return;
+refreshChatDisplay() {
+    // Only refresh the chat box, not the entire portal
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
 
-        const scrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
+    const scrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
 
-        chatBox.innerHTML = this.chatMessages.length > 0 ? this.chatMessages.map(msg => `
+    chatBox.innerHTML = this.chatMessages.length > 0 ? this.chatMessages.map(msg => `
             <div style="display: flex; gap: 10px; align-items: flex-start;">
                 <div style="font-weight: bold; color: ${this.getRankColor(msg.rank)}; font-size: 14px; min-width: 80px;">
                     [${msg.rank}] ${msg.user}:
@@ -1596,37 +1584,37 @@ class UserPortal {
             </div>
         `).join('') : '<div style="text-align: center; color: var(--text-secondary); margin-top: 50px;">No messages yet. Start the conversation!</div>';
 
-        // Auto-scroll to bottom if user was already at bottom
-        if (scrolledToBottom) {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    // Auto-scroll to bottom if user was already at bottom
+    if (scrolledToBottom) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
+startChatAutoRefresh() {
+    // Clear any existing interval
+    if (this.chatRefreshInterval) {
+        clearInterval(this.chatRefreshInterval);
     }
 
-    startChatAutoRefresh() {
-        // Clear any existing interval
-        if (this.chatRefreshInterval) {
-            clearInterval(this.chatRefreshInterval);
+    // Refresh chat every 1 second
+    this.chatRefreshInterval = setInterval(() => {
+        if (this.activeTab === 'chat') {
+            // Reload messages from localStorage (in case another tab updated them)
+            this.chatMessages = JSON.parse(localStorage.getItem('quantum_global_chat')) || [];
+            this.refreshChatDisplay();
         }
+    }, 1000);
+}
 
-        // Refresh chat every 1 second
-        this.chatRefreshInterval = setInterval(() => {
-            if (this.activeTab === 'chat') {
-                // Reload messages from localStorage (in case another tab updated them)
-                this.chatMessages = JSON.parse(localStorage.getItem('quantum_global_chat')) || [];
-                this.refreshChatDisplay();
-            }
-        }, 1000);
+stopChatAutoRefresh() {
+    if (this.chatRefreshInterval) {
+        clearInterval(this.chatRefreshInterval);
+        this.chatRefreshInterval = null;
     }
+}
 
-    stopChatAutoRefresh() {
-        if (this.chatRefreshInterval) {
-            clearInterval(this.chatRefreshInterval);
-            this.chatRefreshInterval = null;
-        }
-    }
-
-    renderScriptsContent() {
-        return `
+renderScriptsContent() {
+    return `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>My Scripts</h2>
                 <button class="btn-primary" style="width: auto; padding: 8px 16px;" onclick="window.userPortal.createNewScript()">
@@ -1661,16 +1649,16 @@ class UserPortal {
                 `}
             </div>
         `;
-    }
+}
 
-    renderNewsContent() {
-        const news = [
-            { title: "v2.5.0 Released!", date: "Today", type: "update", content: "Added new Magnet logic, improved Catch consistency, and fixed crash on injection." },
-            { title: "Maintenance Scheduled", date: "Yesterday", type: "alert", content: "Servers will be down for 1 hour on Dec 10th for upgrades." },
-            { title: "New Game Supported", date: "2 days ago", type: "new", content: "Added support for 'Touchdown Simulator' with auto-catch." }
-        ];
+renderNewsContent() {
+    const news = [
+        { title: "v2.5.0 Released!", date: "Today", type: "update", content: "Added new Magnet logic, improved Catch consistency, and fixed crash on injection." },
+        { title: "Maintenance Scheduled", date: "Yesterday", type: "alert", content: "Servers will be down for 1 hour on Dec 10th for upgrades." },
+        { title: "New Game Supported", date: "2 days ago", type: "new", content: "Added support for 'Touchdown Simulator' with auto-catch." }
+    ];
 
-        return `
+    return `
             <h2 style="margin-bottom: 20px;">News & Updates</h2>
             <div class="news-grid">
                 ${news.map(item => `
@@ -1683,10 +1671,10 @@ class UserPortal {
                 `).join('')}
             </div>
         `;
-    }
+}
 
-    renderGeneratorContent() {
-        return `
+renderGeneratorContent() {
+    return `
             <h2 style="margin-bottom: 20px;">Script Generator</h2>
             <div class="glass-card" style="padding: 25px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
@@ -1752,14 +1740,14 @@ class UserPortal {
                 </div>
             </div>
         `;
-    }
+}
 
-    updateGeneratorOptions() {
-        const game = document.getElementById('genGame').value;
-        const container = document.getElementById('genOptions');
+updateGeneratorOptions() {
+    const game = document.getElementById('genGame').value;
+    const container = document.getElementById('genOptions');
 
-        if (game === 'universal') {
-            container.innerHTML = `
+    if (game === 'universal') {
+        container.innerHTML = `
                 <div class="input-group">
                     <label>WalkSpeed</label>
                     <input type="number" id="genWalkSpeed" class="modern-input" value="16">
@@ -1783,8 +1771,8 @@ class UserPortal {
                     </label>
                 </div>
             `;
-        } else if (game === 'bloxfruits') {
-            container.innerHTML = `
+    } else if (game === 'bloxfruits') {
+        container.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="checkbox-container">
                         <input type="checkbox" id="bfAutoFarm"> Auto Farm Level
@@ -1808,8 +1796,8 @@ class UserPortal {
                     </label>
                 </div>
             `;
-        } else if (game === 'dahood') {
-            container.innerHTML = `
+    } else if (game === 'dahood') {
+        container.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="checkbox-container">
                         <input type="checkbox" id="dhSilentAim"> Silent Aim
@@ -1829,8 +1817,8 @@ class UserPortal {
                     </div>
                 </div>
             `;
-        } else if (game === 'petsim99') {
-            container.innerHTML = `
+    } else if (game === 'petsim99') {
+        container.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="checkbox-container">
                         <input type="checkbox" id="psAutoFarm"> Auto Farm Coins
@@ -1846,89 +1834,89 @@ class UserPortal {
                     </label>
                 </div>
             `;
+    }
+}
+
+generateScript() {
+    const game = document.getElementById('genGame').value;
+    let script = `-- Generated by Quantum UI\n-- Game: ${game.toUpperCase()}\n-- Date: ${new Date().toLocaleString()}\n\n`;
+    script += `local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()\n`;
+    script += `local Window = Library.CreateLib("Quantum - ${game.toUpperCase()}", "DarkTheme")\n`;
+    script += `local Tab = Window:NewTab("Main")\n`;
+    script += `local Section = Tab:NewSection("Features")\n\n`;
+
+    if (game === 'universal') {
+        const ws = document.getElementById('genWalkSpeed').value;
+        const jp = document.getElementById('genJumpPower').value;
+        const esp = document.getElementById('genEsp').checked;
+        const aimbot = document.getElementById('genAimbot').checked;
+        const infJump = document.getElementById('genInfiniteJump').checked;
+
+        if (ws && ws !== '16') {
+            script += `-- WalkSpeed\n`;
+            script += `Section:NewSlider("WalkSpeed", "Changes player speed", 500, 16, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s\nend)\n\n`;
+            script += `game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = ${ws}\n\n`;
+        }
+        if (jp && jp !== '50') {
+            script += `-- JumpPower\n`;
+            script += `Section:NewSlider("JumpPower", "Changes jump height", 500, 50, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s\nend)\n\n`;
+            script += `game.Players.LocalPlayer.Character.Humanoid.JumpPower = ${jp}\n\n`;
+        }
+        if (infJump) {
+            script += `-- Infinite Jump\n`;
+            script += `Section:NewToggle("Infinite Jump", "Jump in the air", function(state)\n    if state then\n        _G.InfJump = true\n        game:GetService("UserInputService").JumpRequest:Connect(function()\n            if _G.InfJump then\n                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")\n            end\n        end)\n    else\n        _G.InfJump = false\n    end\nend)\n\n`;
+        }
+        if (esp) {
+            script += `-- ESP\n`;
+            script += `Section:NewButton("Toggle ESP", "See players through walls", function()\n    loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()\nend)\n\n`;
+        }
+        if (aimbot) {
+            script += `-- Aimbot\n`;
+            script += `Section:NewButton("Load Aimbot", "Universal Aimbot", function()\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Main.lua"))()\nend)\n\n`;
+        }
+
+    } else if (game === 'bloxfruits') {
+        const autoFarm = document.getElementById('bfAutoFarm').checked;
+        const autoChest = document.getElementById('bfAutoChest').checked;
+        const weapon = document.getElementById('bfWeapon').value;
+        const espFruit = document.getElementById('bfEspFruit').checked;
+
+        if (autoFarm) {
+            script += `Section:NewToggle("Auto Farm Level", "Farms closest mobs", function(state)\n    _G.AutoFarm = state\n    while _G.AutoFarm do wait()\n        -- Auto Farm Logic Here\n        print("Farming with ${weapon}...")\n    end\nend)\n\n`;
+        }
+        if (autoChest) {
+            script += `Section:NewToggle("Auto Collect Chests", "Teleports to chests", function(state)\n    _G.AutoChest = state\nend)\n\n`;
+        }
+        if (espFruit) {
+            script += `Section:NewButton("ESP Fruits", "Locate fruits", function()\n    -- ESP Logic\nend)\n\n`;
+        }
+
+    } else if (game === 'dahood') {
+        const silentAim = document.getElementById('dhSilentAim').checked;
+        const autoStomp = document.getElementById('dhAutoStomp').checked;
+        const fly = document.getElementById('dhFly').checked;
+        const flySpeed = document.getElementById('dhFlySpeed').value;
+
+        if (silentAim) {
+            script += `Section:NewToggle("Silent Aim", "Hit shots automatically", function(state)\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/DaHoodScripts/SilentAim/main/source.lua"))()\nend)\n\n`;
+        }
+        if (fly) {
+            script += `Section:NewToggle("Fly", "Fly mode", function(state)\n    -- Fly Logic Speed: ${flySpeed}\nend)\n\n`;
         }
     }
 
-    generateScript() {
-        const game = document.getElementById('genGame').value;
-        let script = `-- Generated by Quantum UI\n-- Game: ${game.toUpperCase()}\n-- Date: ${new Date().toLocaleString()}\n\n`;
-        script += `local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()\n`;
-        script += `local Window = Library.CreateLib("Quantum - ${game.toUpperCase()}", "DarkTheme")\n`;
-        script += `local Tab = Window:NewTab("Main")\n`;
-        script += `local Section = Tab:NewSection("Features")\n\n`;
+    script += `print("Quantum UI: Script Loaded Successfully!")`;
 
-        if (game === 'universal') {
-            const ws = document.getElementById('genWalkSpeed').value;
-            const jp = document.getElementById('genJumpPower').value;
-            const esp = document.getElementById('genEsp').checked;
-            const aimbot = document.getElementById('genAimbot').checked;
-            const infJump = document.getElementById('genInfiniteJump').checked;
+    const output = document.getElementById('genOutput');
+    output.value = script;
 
-            if (ws && ws !== '16') {
-                script += `-- WalkSpeed\n`;
-                script += `Section:NewSlider("WalkSpeed", "Changes player speed", 500, 16, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s\nend)\n\n`;
-                script += `game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = ${ws}\n\n`;
-            }
-            if (jp && jp !== '50') {
-                script += `-- JumpPower\n`;
-                script += `Section:NewSlider("JumpPower", "Changes jump height", 500, 50, function(s)\n    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s\nend)\n\n`;
-                script += `game.Players.LocalPlayer.Character.Humanoid.JumpPower = ${jp}\n\n`;
-            }
-            if (infJump) {
-                script += `-- Infinite Jump\n`;
-                script += `Section:NewToggle("Infinite Jump", "Jump in the air", function(state)\n    if state then\n        _G.InfJump = true\n        game:GetService("UserInputService").JumpRequest:Connect(function()\n            if _G.InfJump then\n                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")\n            end\n        end)\n    else\n        _G.InfJump = false\n    end\nend)\n\n`;
-            }
-            if (esp) {
-                script += `-- ESP\n`;
-                script += `Section:NewButton("Toggle ESP", "See players through walls", function()\n    loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()\nend)\n\n`;
-            }
-            if (aimbot) {
-                script += `-- Aimbot\n`;
-                script += `Section:NewButton("Load Aimbot", "Universal Aimbot", function()\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Main.lua"))()\nend)\n\n`;
-            }
+    // Add typing animation effect
+    output.style.opacity = '0.5';
+    setTimeout(() => output.style.opacity = '1', 200);
+}
 
-        } else if (game === 'bloxfruits') {
-            const autoFarm = document.getElementById('bfAutoFarm').checked;
-            const autoChest = document.getElementById('bfAutoChest').checked;
-            const weapon = document.getElementById('bfWeapon').value;
-            const espFruit = document.getElementById('bfEspFruit').checked;
-
-            if (autoFarm) {
-                script += `Section:NewToggle("Auto Farm Level", "Farms closest mobs", function(state)\n    _G.AutoFarm = state\n    while _G.AutoFarm do wait()\n        -- Auto Farm Logic Here\n        print("Farming with ${weapon}...")\n    end\nend)\n\n`;
-            }
-            if (autoChest) {
-                script += `Section:NewToggle("Auto Collect Chests", "Teleports to chests", function(state)\n    _G.AutoChest = state\nend)\n\n`;
-            }
-            if (espFruit) {
-                script += `Section:NewButton("ESP Fruits", "Locate fruits", function()\n    -- ESP Logic\nend)\n\n`;
-            }
-
-        } else if (game === 'dahood') {
-            const silentAim = document.getElementById('dhSilentAim').checked;
-            const autoStomp = document.getElementById('dhAutoStomp').checked;
-            const fly = document.getElementById('dhFly').checked;
-            const flySpeed = document.getElementById('dhFlySpeed').value;
-
-            if (silentAim) {
-                script += `Section:NewToggle("Silent Aim", "Hit shots automatically", function(state)\n    loadstring(game:HttpGet("https://raw.githubusercontent.com/DaHoodScripts/SilentAim/main/source.lua"))()\nend)\n\n`;
-            }
-            if (fly) {
-                script += `Section:NewToggle("Fly", "Fly mode", function(state)\n    -- Fly Logic Speed: ${flySpeed}\nend)\n\n`;
-            }
-        }
-
-        script += `print("Quantum UI: Script Loaded Successfully!")`;
-
-        const output = document.getElementById('genOutput');
-        output.value = script;
-
-        // Add typing animation effect
-        output.style.opacity = '0.5';
-        setTimeout(() => output.style.opacity = '1', 200);
-    }
-
-    renderMarketplaceContent() {
-        return `
+renderMarketplaceContent() {
+    return `
             <h2 style="margin-bottom: 20px;">Theme Marketplace</h2>
             <div style="margin-bottom: 20px; display: flex; gap: 10px;">
                 <input type="text" id="themeCodeInput" class="modern-input" placeholder="Enter Code (Rank or Theme)..." style="margin-bottom: 0;">
@@ -1950,55 +1938,55 @@ class UserPortal {
                 `).join('')}
             </div>
         `;
-    }
+}
 
-    redeemCode() {
-        const input = document.getElementById('themeCodeInput');
-        const code = input.value.trim().toUpperCase();
-        if (!code) return;
+redeemCode() {
+    const input = document.getElementById('themeCodeInput');
+    const code = input.value.trim().toUpperCase();
+    if (!code) return;
 
-        // Rank Codes
-        const rankCodes = {
-            'QUANTUM_FOUNDER_999': 'Founder',
-            'DEV_MODE_ON': 'Developer',
-            'ADMIN_POWER_UP': 'Admin',
-            'MOD_SQUAD_2025': 'Moderator',
-            'VIP_STATUS_NOW': 'VIP'
-        };
+    // Rank Codes
+    const rankCodes = {
+        'QUANTUM_FOUNDER_999': 'Founder',
+        'DEV_MODE_ON': 'Developer',
+        'ADMIN_POWER_UP': 'Admin',
+        'MOD_SQUAD_2025': 'Moderator',
+        'VIP_STATUS_NOW': 'VIP'
+    };
 
-        if (rankCodes[code]) {
-            const newRank = rankCodes[code];
-            if (this.rank === newRank) {
-                this.showNotification(`You are already ${newRank}!`, 'info');
-                return;
-            }
-            this.rank = newRank;
-            this.saveUserData();
-            this.showNotification(`Success! Rank updated to ${newRank}`, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-
-            // Play success sound
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => { });
+    if (rankCodes[code]) {
+        const newRank = rankCodes[code];
+        if (this.rank === newRank) {
+            this.showNotification(`You are already ${newRank}!`, 'info');
             return;
         }
+        this.rank = newRank;
+        this.saveUserData();
+        this.showNotification(`Success! Rank updated to ${newRank}`, 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
 
-        // Theme Codes
-        const theme = this.availableThemes.find(t => t.code === code);
-        if (theme) {
-            this.installTheme(theme.name);
-            this.showNotification(`Theme ${theme.name} Unlocked & Applied!`, 'success');
-            return;
-        }
-
-        this.showNotification('Invalid or expired code.', 'error');
+        // Play success sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => { });
+        return;
     }
 
-    renderCommandsContent() {
-        const userPriority = this.rankDefinitions[this.rank].priority;
+    // Theme Codes
+    const theme = this.availableThemes.find(t => t.code === code);
+    if (theme) {
+        this.installTheme(theme.name);
+        this.showNotification(`Theme ${theme.name} Unlocked & Applied!`, 'success');
+        return;
+    }
 
-        return `
+    this.showNotification('Invalid or expired code.', 'error');
+}
+
+renderCommandsContent() {
+    const userPriority = this.rankDefinitions[this.rank].priority;
+
+    return `
             <h2 style="margin-bottom: 20px;">Command Center</h2>
             <div class="glass-card">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border);">
@@ -2013,10 +2001,10 @@ class UserPortal {
 
                 <div style="display: grid; gap: 10px;">
                     ${Object.entries(this.commands).map(([cmd, details]) => {
-            const requiredPriority = this.rankDefinitions[details.rank].priority;
-            const hasPermission = userPriority >= requiredPriority;
+        const requiredPriority = this.rankDefinitions[details.rank].priority;
+        const hasPermission = userPriority >= requiredPriority;
 
-            return `
+        return `
                             <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; opacity: ${hasPermission ? 1 : 0.5};">
                                 <div>
                                     <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: ${hasPermission ? 'var(--accent-color)' : 'var(--text-secondary)'};">
@@ -2034,45 +2022,45 @@ class UserPortal {
                                 </div>
                             </div>
                         `;
-        }).join('')}
+    }).join('')}
                 </div>
             </div>
         `;
+}
+
+installTheme(themeName) {
+    const theme = this.availableThemes.find(t => t.name === themeName);
+    if (theme) {
+        this.currentUser.theme = themeName;
+        this.saveUserData();
+        this.applyTheme(themeName);
+        this.showNotification(`Theme applied: ${themeName}`, 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    }
+}
+
+applyTheme(themeName) {
+    const theme = this.availableThemes.find(t => t.name === themeName) || this.availableThemes[0];
+    const root = document.documentElement;
+
+    // Apply colors
+    for (const [key, value] of Object.entries(theme.colors)) {
+        root.style.setProperty(key, value);
     }
 
-    installTheme(themeName) {
-        const theme = this.availableThemes.find(t => t.name === themeName);
-        if (theme) {
-            this.currentUser.theme = themeName;
-            this.saveUserData();
-            this.applyTheme(themeName);
-            this.showNotification(`Theme applied: ${themeName}`, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        }
-    }
+    // Handle Background (Image or Video)
+    const app = document.getElementById('app');
+    let bgVideo = document.getElementById('bgVideo');
 
-    applyTheme(themeName) {
-        const theme = this.availableThemes.find(t => t.name === themeName) || this.availableThemes[0];
-        const root = document.documentElement;
-
-        // Apply colors
-        for (const [key, value] of Object.entries(theme.colors)) {
-            root.style.setProperty(key, value);
-        }
-
-        // Handle Background (Image or Video)
-        const app = document.getElementById('app');
-        let bgVideo = document.getElementById('bgVideo');
-
-        if (theme.background && (theme.background.endsWith('.mp4') || theme.background.endsWith('.webm'))) {
-            // Video Background
-            if (!bgVideo) {
-                bgVideo = document.createElement('video');
-                bgVideo.id = 'bgVideo';
-                bgVideo.autoplay = true;
-                bgVideo.loop = true;
-                bgVideo.muted = true;
-                bgVideo.style.cssText = `
+    if (theme.background && (theme.background.endsWith('.mp4') || theme.background.endsWith('.webm'))) {
+        // Video Background
+        if (!bgVideo) {
+            bgVideo = document.createElement('video');
+            bgVideo.id = 'bgVideo';
+            bgVideo.autoplay = true;
+            bgVideo.loop = true;
+            bgVideo.muted = true;
+            bgVideo.style.cssText = `
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -2083,33 +2071,33 @@ class UserPortal {
                     opacity: 0;
                     transition: opacity 1s ease;
                 `;
-                document.body.insertBefore(bgVideo, document.body.firstChild);
-            }
-            bgVideo.src = theme.background;
-            bgVideo.style.opacity = '1';
-            if (app) app.style.backgroundImage = 'none';
-        } else {
-            // Image Background
-            if (bgVideo) {
-                bgVideo.style.opacity = '0';
-                setTimeout(() => bgVideo.remove(), 1000);
-            }
-            if (app) app.style.backgroundImage = `url('${theme.background}')`;
+            document.body.insertBefore(bgVideo, document.body.firstChild);
         }
-
-        // Apply Glassmorphism Opacity
-        const glassOpacity = localStorage.getItem('quantum_glass_opacity') || '0.7';
-        root.style.setProperty('--glass-opacity', glassOpacity);
-
-        // Save preference
-        if (this.currentUser) {
-            this.currentUser.theme = themeName;
-            this.saveUserData();
+        bgVideo.src = theme.background;
+        bgVideo.style.opacity = '1';
+        if (app) app.style.backgroundImage = 'none';
+    } else {
+        // Image Background
+        if (bgVideo) {
+            bgVideo.style.opacity = '0';
+            setTimeout(() => bgVideo.remove(), 1000);
         }
+        if (app) app.style.backgroundImage = `url('${theme.background}')`;
     }
 
-    renderProfileContent() {
-        return `
+    // Apply Glassmorphism Opacity
+    const glassOpacity = localStorage.getItem('quantum_glass_opacity') || '0.7';
+    root.style.setProperty('--glass-opacity', glassOpacity);
+
+    // Save preference
+    if (this.currentUser) {
+        this.currentUser.theme = themeName;
+        this.saveUserData();
+    }
+}
+
+renderProfileContent() {
+    return `
             <h2 style="margin-bottom: 20px;">Profile Settings</h2>
             <div class="glass-card">
                 <div class="profile-edit-header">
@@ -2183,146 +2171,146 @@ class UserPortal {
                 <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
             </div>
         `;
-    }
+}
 
-    updateGlassOpacity(value) {
-        document.documentElement.style.setProperty('--glass-opacity', value);
-        localStorage.setItem('quantum_glass_opacity', value);
-        const display = document.getElementById('glassOpacityValue');
-        if (display) display.textContent = value;
-    }
+updateGlassOpacity(value) {
+    document.documentElement.style.setProperty('--glass-opacity', value);
+    localStorage.setItem('quantum_glass_opacity', value);
+    const display = document.getElementById('glassOpacityValue');
+    if (display) display.textContent = value;
+}
 
-    toggleVisualizer(enabled) {
-        localStorage.setItem('quantum_visualizer_enabled', enabled);
-        const canvas = document.getElementById('audioVisualizer');
-        if (canvas) {
-            canvas.style.display = enabled ? 'block' : 'none';
-        }
-        if (enabled && this.isPlaying) {
-            this.drawVisualizer();
-        }
+toggleVisualizer(enabled) {
+    localStorage.setItem('quantum_visualizer_enabled', enabled);
+    const canvas = document.getElementById('audioVisualizer');
+    if (canvas) {
+        canvas.style.display = enabled ? 'block' : 'none';
     }
+    if (enabled && this.isPlaying) {
+        this.drawVisualizer();
+    }
+}
 
     async resetHWID() {
-        if (!confirm("Are you sure you want to reset your HWID binding? This can only be done once every 7 days.")) return;
+    if (!confirm("Are you sure you want to reset your HWID binding? This can only be done once every 7 days.")) return;
 
-        try {
-            const { data: keyData, error } = await this.supabase
-                .from('keys')
-                .select('*')
-                .eq('key', this.currentUser.key)
-                .single();
+    try {
+        const { data: keyData, error } = await this.supabase
+            .from('keys')
+            .select('*')
+            .eq('key', this.currentUser.key)
+            .single();
 
-            if (error) throw error;
+        if (error) throw error;
 
-            const lastReset = keyData.last_hwid_reset ? new Date(keyData.last_hwid_reset).getTime() : 0;
-            const now = Date.now();
-            const cooldown = 7 * 24 * 60 * 60 * 1000;
+        const lastReset = keyData.last_hwid_reset ? new Date(keyData.last_hwid_reset).getTime() : 0;
+        const now = Date.now();
+        const cooldown = 7 * 24 * 60 * 60 * 1000;
 
-            if (now - lastReset < cooldown) {
-                const remaining = Math.ceil((cooldown - (now - lastReset)) / (1000 * 60 * 60 * 24));
-                alert(`Cooldown active. You can reset again in ${remaining} days.`);
-                return;
-            }
+        if (now - lastReset < cooldown) {
+            const remaining = Math.ceil((cooldown - (now - lastReset)) / (1000 * 60 * 60 * 24));
+            alert(`Cooldown active. You can reset again in ${remaining} days.`);
+            return;
+        }
 
-            const { error: updateError } = await this.supabase
+        const { error: updateError } = await this.supabase
+            .from('keys')
+            .update({
+                hwid: null,
+                last_hwid_reset: new Date().toISOString()
+            })
+            .eq('key', this.currentUser.key);
+
+        if (updateError) throw updateError;
+
+        alert("HWID Reset Successful! You can now use your key on a new device.");
+        this.renderPortal(keyData); // Refresh UI
+    } catch (err) {
+        console.error("HWID Reset Error:", err);
+        alert("Failed to reset HWID: " + err.message);
+    }
+}
+
+    async toggleKeyFreeze() {
+    try {
+        const { data: keyData, error } = await this.supabase
+            .from('keys')
+            .select('*')
+            .eq('key', this.currentUser.key)
+            .single();
+
+        if (error) throw error;
+
+        const isPaused = keyData.is_paused;
+        const now = new Date();
+
+        if (isPaused) {
+            // Resume
+            const pausedAt = new Date(keyData.paused_at).getTime();
+            const elapsed = now.getTime() - pausedAt;
+            const currentExpiry = new Date(keyData.expires_at).getTime();
+            const newExpiry = new Date(currentExpiry + elapsed).toISOString();
+
+            await this.supabase
                 .from('keys')
                 .update({
-                    hwid: null,
-                    last_hwid_reset: new Date().toISOString()
+                    is_paused: false,
+                    paused_at: null,
+                    expires_at: newExpiry
                 })
                 .eq('key', this.currentUser.key);
 
-            if (updateError) throw updateError;
-
-            alert("HWID Reset Successful! You can now use your key on a new device.");
-            this.renderPortal(keyData); // Refresh UI
-        } catch (err) {
-            console.error("HWID Reset Error:", err);
-            alert("Failed to reset HWID: " + err.message);
-        }
-    }
-
-    async toggleKeyFreeze() {
-        try {
-            const { data: keyData, error } = await this.supabase
+            alert("Subscription Resumed! Expiry extended.");
+        } else {
+            // Pause
+            await this.supabase
                 .from('keys')
-                .select('*')
-                .eq('key', this.currentUser.key)
-                .single();
+                .update({
+                    is_paused: true,
+                    paused_at: now.toISOString()
+                })
+                .eq('key', this.currentUser.key);
 
-            if (error) throw error;
-
-            const isPaused = keyData.is_paused;
-            const now = new Date();
-
-            if (isPaused) {
-                // Resume
-                const pausedAt = new Date(keyData.paused_at).getTime();
-                const elapsed = now.getTime() - pausedAt;
-                const currentExpiry = new Date(keyData.expires_at).getTime();
-                const newExpiry = new Date(currentExpiry + elapsed).toISOString();
-
-                await this.supabase
-                    .from('keys')
-                    .update({
-                        is_paused: false,
-                        paused_at: null,
-                        expires_at: newExpiry
-                    })
-                    .eq('key', this.currentUser.key);
-
-                alert("Subscription Resumed! Expiry extended.");
-            } else {
-                // Pause
-                await this.supabase
-                    .from('keys')
-                    .update({
-                        is_paused: true,
-                        paused_at: now.toISOString()
-                    })
-                    .eq('key', this.currentUser.key);
-
-                alert("Subscription Paused. Your time is frozen.");
-            }
-
-            // Refresh Data
-            const { data: newData } = await this.supabase.from('keys').select('*').eq('key', this.currentUser.key).single();
-            this.renderPortal(newData);
-
-        } catch (err) {
-            console.error("Freeze Error:", err);
-            alert("Action failed: " + err.message);
+            alert("Subscription Paused. Your time is frozen.");
         }
+
+        // Refresh Data
+        const { data: newData } = await this.supabase.from('keys').select('*').eq('key', this.currentUser.key).single();
+        this.renderPortal(newData);
+
+    } catch (err) {
+        console.error("Freeze Error:", err);
+        alert("Action failed: " + err.message);
     }
+}
 
-    saveProfile() {
-        const newUsername = document.getElementById('editUsername').value;
-        const newBanner = document.getElementById('editBanner').value;
+saveProfile() {
+    const newUsername = document.getElementById('editUsername').value;
+    const newBanner = document.getElementById('editBanner').value;
 
-        if (newUsername) this.currentUser.username = newUsername;
-        this.currentUser.banner = newBanner;
+    if (newUsername) this.currentUser.username = newUsername;
+    this.currentUser.banner = newBanner;
 
-        this.saveUserData();
-        this.showNotification('Profile updated!', 'success');
-        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+    this.saveUserData();
+    this.showNotification('Profile updated!', 'success');
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+}
+
+handleAvatarUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.currentUser.avatar = e.target.result;
+            this.saveUserData();
+            this.showNotification('Avatar updated!', 'success');
+            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+        };
+        reader.readAsDataURL(input.files[0]);
     }
+}
 
-    handleAvatarUpload(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.currentUser.avatar = e.target.result;
-                this.saveUserData();
-                this.showNotification('Avatar updated!', 'success');
-                this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    renderSupportContent() {
-        return `
+renderSupportContent() {
+    return `
             <h2 style="margin-bottom: 20px;">Support</h2>
             <div class="support-widget">
                 <i class="fab fa-discord" style="font-size: 48px; margin-bottom: 15px;"></i>
@@ -2342,239 +2330,239 @@ class UserPortal {
                 </div>
             </div>
         `;
+}
+
+askAI() {
+    const input = document.getElementById('aiInput');
+    const question = input.value.trim();
+    if (!question) return;
+
+    const chatBox = document.getElementById('aiChatBox');
+    chatBox.innerHTML += `<div style="margin-top: 10px; text-align: right; color: var(--text-primary);">You: ${question}</div>`;
+    input.value = '';
+
+    // Simulate AI Response
+    setTimeout(() => {
+        let answer = "I'm not sure about that yet.";
+        if (question.toLowerCase().includes('key')) answer = "Keys are generated by admins. You can buy one in our Discord.";
+        if (question.toLowerCase().includes('script')) answer = "You can find scripts in the 'My Scripts' tab or generate one in 'Script Gen'.";
+        if (question.toLowerCase().includes('hello')) answer = "Hello! I am the Quantum AI Assistant.";
+
+        chatBox.innerHTML += `<div style="margin-top: 10px; color: var(--accent-color);">Quantum AI: ${answer}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 1000);
+}
+
+votePoll(optionId) {
+    if (this.pollData.userVoted) {
+        this.showNotification('You have already voted!', 'warning');
+        return;
     }
 
-    askAI() {
-        const input = document.getElementById('aiInput');
-        const question = input.value.trim();
-        if (!question) return;
-
-        const chatBox = document.getElementById('aiChatBox');
-        chatBox.innerHTML += `<div style="margin-top: 10px; text-align: right; color: var(--text-primary);">You: ${question}</div>`;
-        input.value = '';
-
-        // Simulate AI Response
-        setTimeout(() => {
-            let answer = "I'm not sure about that yet.";
-            if (question.toLowerCase().includes('key')) answer = "Keys are generated by admins. You can buy one in our Discord.";
-            if (question.toLowerCase().includes('script')) answer = "You can find scripts in the 'My Scripts' tab or generate one in 'Script Gen'.";
-            if (question.toLowerCase().includes('hello')) answer = "Hello! I am the Quantum AI Assistant.";
-
-            chatBox.innerHTML += `<div style="margin-top: 10px; color: var(--accent-color);">Quantum AI: ${answer}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }, 1000);
-    }
-
-    votePoll(optionId) {
-        if (this.pollData.userVoted) {
-            this.showNotification('You have already voted!', 'warning');
-            return;
-        }
-
-        const option = this.pollData.options.find(o => o.id === optionId);
-        if (option) {
-            option.votes++;
-            this.pollData.userVoted = true;
-            localStorage.setItem('quantum_poll_data_v2', JSON.stringify(this.pollData));
-            this.showNotification('Vote recorded!', 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        }
-    }
-
-    generateScript() {
-        const ws = document.getElementById('genWalkSpeed').value || 16;
-        const jp = document.getElementById('genJumpPower').value || 50;
-        const esp = document.getElementById('genEsp').checked;
-        const aimbot = document.getElementById('genAimbot').checked;
-        const infJump = document.getElementById('genInfiniteJump').checked;
-
-        let script = `-- Generated by Quantum Portal\n\n`;
-        script += `local plr = game.Players.LocalPlayer\n`;
-        script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
-
-        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws}\n`;
-        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp}\n`;
-
-        if (infJump) {
-            script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
-        }
-
-        if (esp) {
-            script += `\n-- Simple ESP\nfor _,p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1,0,0)\n    end\nend\n`;
-        }
-
-        if (aimbot) {
-            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _,p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
-        }
-
-        document.getElementById('genOutput').value = script;
-        this.showNotification('Script Generated!', 'success');
-    }
-
-    copyGeneratedScript() {
-        const output = document.getElementById('genOutput');
-        if (!output.value) return;
-        navigator.clipboard.writeText(output.value).then(() => {
-            this.showNotification('Copied to clipboard!', 'success');
-        });
-    }
-
-    initBackground() {
-        // Create Canvas
-        const canvas = document.createElement('canvas');
-        canvas.id = 'bgCanvas';
-        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;';
-        document.body.appendChild(canvas);
-
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-
-        const resize = () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        };
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2;
-                this.color = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < 0) this.x = width;
-                if (this.x > width) this.x = 0;
-                if (this.y < 0) this.y = height;
-                if (this.y > height) this.y = 0;
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // Init Particles
-        for (let i = 0; i < 100; i++) {
-            particles.push(new Particle());
-        }
-
-        const animate = () => {
-            ctx.clearRect(0, 0, width, height);
-
-            // Draw connections
-            particles.forEach((p, index) => {
-                p.update();
-                p.draw();
-
-                // Connect nearby particles
-                for (let j = index + 1; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const dx = p.x - p2.x;
-                    const dy = p.y - p2.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < 100) {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 100)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        ctx.stroke();
-                    }
-                }
-            });
-
-            requestAnimationFrame(animate);
-        };
-        animate();
-    }
-
-    createNewScript() {
-        const name = prompt("Enter script name:");
-        if (!name) return;
-        const content = prompt("Enter script content (Lua):");
-        if (!content) return;
-
-        this.scripts.push({ name, content, createdAt: Date.now() });
-        this.saveUserData();
-        this.showNotification('Script saved!', 'success');
+    const option = this.pollData.options.find(o => o.id === optionId);
+    if (option) {
+        option.votes++;
+        this.pollData.userVoted = true;
+        localStorage.setItem('quantum_poll_data_v2', JSON.stringify(this.pollData));
+        this.showNotification('Vote recorded!', 'success');
         this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
     }
+}
 
-    deleteScript(index) {
-        if (confirm("Are you sure you want to delete this script?")) {
-            this.scripts.splice(index, 1);
-            this.saveUserData();
-            this.showNotification('Script deleted!', 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+generateScript() {
+    const ws = document.getElementById('genWalkSpeed').value || 16;
+    const jp = document.getElementById('genJumpPower').value || 50;
+    const esp = document.getElementById('genEsp').checked;
+    const aimbot = document.getElementById('genAimbot').checked;
+    const infJump = document.getElementById('genInfiniteJump').checked;
+
+    let script = `-- Generated by Quantum Portal\n\n`;
+    script += `local plr = game.Players.LocalPlayer\n`;
+    script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
+
+    if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws}\n`;
+    if (jp != 50) script += `char.Humanoid.JumpPower = ${jp}\n`;
+
+    if (infJump) {
+        script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
+    }
+
+    if (esp) {
+        script += `\n-- Simple ESP\nfor _,p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1,0,0)\n    end\nend\n`;
+    }
+
+    if (aimbot) {
+        script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _,p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
+    }
+
+    document.getElementById('genOutput').value = script;
+    this.showNotification('Script Generated!', 'success');
+}
+
+copyGeneratedScript() {
+    const output = document.getElementById('genOutput');
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+        this.showNotification('Copied to clipboard!', 'success');
+    });
+}
+
+initBackground() {
+    // Create Canvas
+    const canvas = document.createElement('canvas');
+    canvas.id = 'bgCanvas';
+    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    const resize = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.size = Math.random() * 2;
+            this.color = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if (this.x < 0) this.x = width;
+            if (this.x > width) this.x = 0;
+            if (this.y < 0) this.y = height;
+            if (this.y > height) this.y = 0;
+        }
+
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
 
-    viewScript(index) {
-        const script = this.scripts[index];
-        alert(`Script: ${script.name}\n\n${script.content}`);
+    // Init Particles
+    for (let i = 0; i < 100; i++) {
+        particles.push(new Particle());
     }
 
-    copyScript(index) {
-        const script = this.scripts[index];
-        navigator.clipboard.writeText(script.content).then(() => {
-            this.showNotification('Script copied to clipboard!', 'success');
+    const animate = () => {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw connections
+        particles.forEach((p, index) => {
+            p.update();
+            p.draw();
+
+            // Connect nearby particles
+            for (let j = index + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 100) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 100)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
         });
+
+        requestAnimationFrame(animate);
+    };
+    animate();
+}
+
+createNewScript() {
+    const name = prompt("Enter script name:");
+    if (!name) return;
+    const content = prompt("Enter script content (Lua):");
+    if (!content) return;
+
+    this.scripts.push({ name, content, createdAt: Date.now() });
+    this.saveUserData();
+    this.showNotification('Script saved!', 'success');
+    this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
+}
+
+deleteScript(index) {
+    if (confirm("Are you sure you want to delete this script?")) {
+        this.scripts.splice(index, 1);
+        this.saveUserData();
+        this.showNotification('Script deleted!', 'success');
+        this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
     }
+}
 
-    copyLoaderScript() {
-        const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
-        navigator.clipboard.writeText(loader).then(() => {
-            this.showNotification('Loader copied to clipboard!', 'success');
-        });
-    }
+viewScript(index) {
+    const script = this.scripts[index];
+    alert(`Script: ${script.name}\n\n${script.content}`);
+}
 
-    executeScript(index) {
-        const script = this.scripts[index];
-        this.showNotification(`Executing: ${script.name}...`, 'info');
-        // Simulate WebSocket execution
-        setTimeout(() => {
-            this.showNotification(`Successfully executed ${script.name} in-game!`, 'success');
-        }, 1000);
-    }
+copyScript(index) {
+    const script = this.scripts[index];
+    navigator.clipboard.writeText(script.content).then(() => {
+        this.showNotification('Script copied to clipboard!', 'success');
+    });
+}
 
-    logout() {
-        if (this.sessionCheckInterval) clearInterval(this.sessionCheckInterval);
-        localStorage.removeItem('user_auth_session');
-        this.currentUser = null;
-        this.renderLogin();
-    }
+copyLoaderScript() {
+    const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
+    navigator.clipboard.writeText(loader).then(() => {
+        this.showNotification('Loader copied to clipboard!', 'success');
+    });
+}
 
-    showNotification(message, type = 'info') {
-        const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
-        const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+executeScript(index) {
+    const script = this.scripts[index];
+    this.showNotification(`Executing: ${script.name}...`, 'info');
+    // Simulate WebSocket execution
+    setTimeout(() => {
+        this.showNotification(`Successfully executed ${script.name} in-game!`, 'success');
+    }, 1000);
+}
 
-        const notif = document.createElement('div');
-        notif.className = 'notification';
-        notif.style.borderLeft = `4px solid ${colors[type]}`;
-        notif.innerHTML = `<i class="fas ${icons[type]}" style="color: ${colors[type]}"></i> ${message}`;
+logout() {
+    if (this.sessionCheckInterval) clearInterval(this.sessionCheckInterval);
+    localStorage.removeItem('user_auth_session');
+    this.currentUser = null;
+    this.renderLogin();
+}
 
-        document.body.appendChild(notif);
+showNotification(message, type = 'info') {
+    const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+    const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
 
-        setTimeout(() => {
-            notif.style.opacity = '0';
-            notif.style.transform = 'translateX(100%)';
-            notif.style.transition = 'all 0.3s ease';
-            setTimeout(() => notif.remove(), 300);
-        }, 3000);
-    }
+    const notif = document.createElement('div');
+    notif.className = 'notification';
+    notif.style.borderLeft = `4px solid ${colors[type]}`;
+    notif.innerHTML = `<i class="fas ${icons[type]}" style="color: ${colors[type]}"></i> ${message}`;
+
+    document.body.appendChild(notif);
+
+    setTimeout(() => {
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(100%)';
+        notif.style.transition = 'all 0.3s ease';
+        setTimeout(() => notif.remove(), 300);
+    }, 3000);
+}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
