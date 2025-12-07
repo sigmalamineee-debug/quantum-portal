@@ -5,9 +5,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration ---
     const FPS_TARGET = 240;
     const PING_BASE = 90;
+    // --- DOM Elements ---
+    const toggles = document.querySelectorAll('.toggle-btn');
+    const sliders = document.querySelectorAll('.slider-container');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const contentSections = document.querySelectorAll('.section');
+    const closeBtn = document.querySelector('.close-btn');
+    const uiContainer = document.querySelector('.ui-container');
+    const header = document.querySelector('.header');
+    const fpsDisplay = document.getElementById('fpsValue');
+    const pingDisplay = document.getElementById('pingValue');
+    const expiryDisplay = document.getElementById('expiry');
+    const mainContent = document.querySelector('.main-content');
+    const inDevelopment = document.querySelector('.in-development');
 
     function updateExpiry() {
         if (!expiryDisplay) return;
+
+        // Check for preview mode data first
+        const previewMode = localStorage.getItem('quantum_preview_mode');
+        const previewExpiry = localStorage.getItem('quantum_preview_expiry');
+
+        if (previewMode === 'true') {
+            if (!previewExpiry || previewExpiry === 'LT' || previewExpiry === 'undefined' || previewExpiry === 'null') {
+                expiryDisplay.textContent = "Expiry: Lifetime";
+                return;
+            }
+            // If it's a timestamp
+            const expiryTime = parseInt(previewExpiry);
+            if (!isNaN(expiryTime)) {
+                const now = Date.now();
+                const remaining = expiryTime - now;
+                if (remaining <= 0) {
+                    expiryDisplay.textContent = "Expiry: Expired";
+                } else {
+                    const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                    expiryDisplay.textContent = `Expiry: ${days}d, ${hours}h, ${minutes}m, ${seconds}s`;
+                }
+                return;
+            }
+        }
 
         const activationTime = parseInt(localStorage.getItem('quantum_activation_time') || Date.now());
         const durationCode = localStorage.getItem('quantum_duration_code') || '1D';
