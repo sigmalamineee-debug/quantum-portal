@@ -5,15 +5,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Initialize Supabase client (using window.supabase from CDN)
 let supabaseClient;
 
-// Wait for DOM to load, then initialize
 if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-        if (window.supabase && window.supabase.createClient) {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            window.supabaseClient = supabaseClient; // Make it globally available
-            console.log('Supabase client initialized successfully');
-        } else {
-            console.error('Supabase library not loaded');
-        }
-    });
+    if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabaseClient; // Make it globally available
+        console.log('Supabase client initialized successfully');
+    } else {
+        console.error('Supabase library not loaded. Ensure the CDN script is placed BEFORE this script.');
+    }
 }
