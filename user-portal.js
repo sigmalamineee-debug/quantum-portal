@@ -155,6 +155,82 @@ class UserPortal {
                 previewColor: '#f43f5e'
             },
             {
+                name: "midnight_purple",
+                author: "Quantum",
+                downloads: 45000,
+                colors: {
+                    '--bg-primary': '#1a0b2e',
+                    '--bg-secondary': '#2d1b4e',
+                    '--accent-color': '#d946ef',
+                    '--accent-glow': 'rgba(217, 70, 239, 0.5)',
+                    '--text-primary': '#ffffff',
+                    '--text-secondary': '#a78bfa',
+                    '--glass-bg': 'rgba(45, 27, 78, 0.7)',
+                    '--glass-border': 'rgba(217, 70, 239, 0.2)',
+                    '--success': '#22c55e',
+                    '--warning': '#eab308',
+                    '--error': '#ef4444'
+                },
+                background: "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
+            },
+            {
+                name: "galactic_nebula",
+                author: "Cosmos",
+                downloads: 32000,
+                colors: {
+                    '--bg-primary': '#0f0c29',
+                    '--bg-secondary': '#302b63',
+                    '--accent-color': '#ff00cc',
+                    '--accent-glow': 'rgba(255, 0, 204, 0.5)',
+                    '--text-primary': '#ffffff',
+                    '--text-secondary': '#bbb',
+                    '--glass-bg': 'rgba(48, 43, 99, 0.7)',
+                    '--glass-border': 'rgba(255, 0, 204, 0.2)',
+                    '--success': '#00ff99',
+                    '--warning': '#ffcc00',
+                    '--error': '#ff3366'
+                },
+                background: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
+            },
+            {
+                name: "cyber_future",
+                author: "NetRunner",
+                downloads: 28000,
+                colors: {
+                    '--bg-primary': '#000000',
+                    '--bg-secondary': '#0a0a0a',
+                    '--accent-color': '#00ffcc',
+                    '--accent-glow': 'rgba(0, 255, 204, 0.5)',
+                    '--text-primary': '#e0e0e0',
+                    '--text-secondary': '#888',
+                    '--glass-bg': 'rgba(10, 10, 10, 0.8)',
+                    '--glass-border': 'rgba(0, 255, 204, 0.3)',
+                    '--success': '#00ff00',
+                    '--warning': '#ffff00',
+                    '--error': '#ff0000'
+                },
+                background: "https://images.unsplash.com/photo-1515630278258-407f66498911?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
+            },
+            {
+                name: "discord_dark",
+                author: "Wumpus",
+                downloads: 50000,
+                colors: {
+                    '--bg-primary': '#36393f',
+                    '--bg-secondary': '#2f3136',
+                    '--accent-color': '#5865F2',
+                    '--accent-glow': 'rgba(88, 101, 242, 0.5)',
+                    '--text-primary': '#dcddde',
+                    '--text-secondary': '#72767d',
+                    '--glass-bg': 'rgba(47, 49, 54, 0.9)',
+                    '--glass-border': 'rgba(88, 101, 242, 0.2)',
+                    '--success': '#3ba55c',
+                    '--warning': '#faa61a',
+                    '--error': '#ed4245'
+                },
+                background: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
+            },
+            {
                 name: "hacker",
                 author: "System",
                 downloads: 1337,
@@ -168,36 +244,6 @@ class UserPortal {
                     '--font-family': "'Courier New', monospace"
                 },
                 previewColor: '#00ff00'
-            },
-            {
-                name: "Neon Nights",
-                author: "Quantum",
-                downloads: 15420,
-                colors: {
-                    '--bg-primary': '#0f0c29',
-                    '--bg-secondary': '#302b63',
-                    '--accent-color': '#ff00cc',
-                    '--accent-glow': 'rgba(255, 0, 204, 0.5)',
-                    '--text-primary': '#ffffff',
-                    '--text-secondary': '#b39ddb',
-                    '--font-family': "'Inter', sans-serif"
-                },
-                previewColor: '#ff00cc'
-            },
-            {
-                name: "Forest",
-                author: "Nature",
-                downloads: 8340,
-                colors: {
-                    '--bg-primary': '#1a2f1a',
-                    '--bg-secondary': '#2d4a2d',
-                    '--accent-color': '#4caf50',
-                    '--accent-glow': 'rgba(76, 175, 80, 0.5)',
-                    '--text-primary': '#e8f5e9',
-                    '--text-secondary': '#a5d6a7',
-                    '--font-family': "'Inter', sans-serif"
-                },
-                previewColor: '#4caf50'
             },
             {
                 name: "Royal Gold",
