@@ -63,7 +63,12 @@ class UserPortal {
             '/announce': { rank: 'Admin', desc: 'Send a global announcement', usage: '/announce [msg]' },
             '/givekey': { rank: 'Developer', desc: 'Generate a new access key', usage: '/givekey' },
             '/setrank': { rank: 'Founder', desc: 'Change a user\'s rank', usage: '/setrank [rank]' },
-            '/clear': { rank: 'Moderator', desc: 'Clear the chat history', usage: '/clear' }
+            '/clear': { rank: 'Moderator', desc: 'Clear the chat history', usage: '/clear' },
+            '/freeze': { rank: 'Admin', desc: 'Freeze a user', usage: '/freeze [username]' },
+            '/godmode': { rank: 'Admin', desc: 'Enable God Mode', usage: '/godmode [username]' },
+            '/heal': { rank: 'Moderator', desc: 'Heal a user', usage: '/heal [username]' },
+            '/kill': { rank: 'Admin', desc: 'Kill a user', usage: '/kill [username]' },
+            '/shutdown': { rank: 'Founder', desc: 'Shutdown the server', usage: '/shutdown' }
         };
 
         // Initialize Visuals
@@ -1390,7 +1395,7 @@ class UserPortal {
         const msg = input.value.trim();
         if (!msg) return;
 
-        const allowedCommandRanks = ['Founder', 'Developer'];
+        const allowedCommandRanks = ['Founder', 'Developer', 'Admin'];
         const isCommandUser = allowedCommandRanks.includes(this.rank);
 
         // Command Handling
