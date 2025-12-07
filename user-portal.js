@@ -614,6 +614,79 @@ class UserPortal {
         });
     }
 
+    async handleLogin() {
+        const keyInput = document.getElementById('keyInput');
+        const key = keyInput.value.trim();
+
+        if (!key) {
+            alert('Please enter a key.');
+            return;
+        }
+
+        // Check local keys first (for demo/offline)
+        let keyData = this.keys.find(k => k.key === key);
+
+        // If not found locally and Supabase is connected, check cloud
+        if (!keyData && this.supabase) {
+            try {
+                const { data, error } = await this.supabase
+                    .from('keys')
+                    .select('*')
+                    .eq('key', key)
+                    .single();
+
+                if (data) {
+                    keyData = data;
+                    // Cache it locally
+                    this.keys.push(keyData);
+                    localStorage.setItem('admin_keys', JSON.stringify(this.keys));
+                }
+            } catch (err) {
+                console.error('Error checking key:', err);
+            }
+        }
+
+        if (keyData) {
+            if (keyData.status !== 'active') {
+                alert(`This key is ${keyData.status}. Please contact support.`);
+                return;
+            }
+
+            if (keyData.hwid && keyData.hwid !== this.deviceHwid) {
+                alert('HWID Mismatch! This key is locked to another device.');
+                return;
+            }
+
+            // Bind HWID if new
+            if (!keyData.hwid) {
+                keyData.hwid = this.deviceHwid;
+                // Update in Supabase if possible
+                if (this.supabase) {
+                    await this.supabase.from('keys').update({ hwid: this.deviceHwid }).eq('key', key);
+                }
+                // Update local
+                const index = this.keys.findIndex(k => k.key === key);
+                if (index !== -1) this.keys[index] = keyData;
+                localStorage.setItem('admin_keys', JSON.stringify(this.keys));
+            }
+
+            // Login Success
+            this.currentUser = {
+                key: keyData.key,
+                username: `User_${keyData.key.substring(0, 4)}`, // Default username
+                loginTime: Date.now()
+            };
+
+            // Load extended profile if exists
+            this.loadUserData(key);
+
+            localStorage.setItem('user_auth_session', JSON.stringify(this.currentUser));
+            this.init(); // Re-initialize to show portal
+        } else {
+            alert('Invalid Key. Please check and try again.');
+        }
+    }
+
     async copyDeviceHwid() {
         try {
             await navigator.clipboard.writeText(this.deviceHwid);
@@ -1627,302 +1700,6 @@ class UserPortal {
                         <div class="input-group">
                             <label>WalkSpeed</label>
                             <input type="number" id="genWalkSpeed" class="modern-input" value="16">
-                        </div>
-                        <div class="input-group">
-                            <label>JumpPower</label>
-                            <input type="number" id="genJumpPower" class="modern-input" value="50">
-                        </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genEsp"> ESP (Wallhack)
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genAimbot"> Aimbot
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genInfiniteJump"> Infinite Jump
-                            </label>
-                        </div>
-
-                        <button class="btn-primary" onclick="window.userPortal.generateScript()">
-                            <i class="fas fa-code"></i> Generate Script
-                        </button>
-                    </div>
-
-                    <div>
-                        <h3 style="margin-bottom: 15px;">Output</h3>
-                        <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
-                        <button class="btn-secondary" style="margin-top: 10px; width: 100%;" onclick="window.userPortal.copyGeneratedScript()">
-                            <i class="fas fa-copy"></i> Copy to Clipboard
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    redeemCode(code) {
-        // Theme Codes
-        const theme = this.availableThemes.find(t => t.code === code);
-        if (theme) {
-            this.installTheme(theme.name);
-            this.showNotification(`Theme ${theme.name} Unlocked & Applied!`, 'success');
-            return;
-        }
-
-        this.showNotification('Invalid or expired code.', 'error');
-    }
-
-    renderCommandsContent() {
-        const userPriority = this.rankDefinitions[this.rank].priority;
-
-        return `
-            <h2 style="margin-bottom: 20px;">Command Center</h2>
-                <div class="glass-card">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border);">
-                        <div style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                            <i class="fas ${this.rankDefinitions[this.rank].icon}" style="color: ${this.rankDefinitions[this.rank].color};"></i>
-                        </div>
-                        <div>
-                            <h3 style="margin: 0;">${this.currentUser.username}</h3>
-                            <p style="color: var(--text-secondary); margin: 0;">Current Rank: <span style="color: ${this.rankDefinitions[this.rank].color}; font-weight: bold;">${this.rank}</span></p>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; gap: 10px;">
-                        ${Object.entries(this.commands).map(([cmd, details]) => {
-            const requiredPriority = this.rankDefinitions[details.rank].priority;
-            const hasPermission = userPriority >= requiredPriority;
-
-            return `
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; opacity: ${hasPermission ? 1 : 0.5};">
-                            <div>
-                                <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: ${hasPermission ? 'var(--accent-color)' : 'var(--text-secondary)'};">
-                                    ${cmd}
-                                </div>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">${details.desc}</div>
-                                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">Usage: ${details.usage}</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Requires</div>
-                                <div style="font-weight: bold; color: ${this.rankDefinitions[details.rank].color};">
-                                    ${details.rank.toUpperCase()}
-                                </div>
-                                ${!hasPermission ? '<div style="color: #ef4444; font-size: 10px; margin-top: 5px;"><i class="fas fa-lock"></i> LOCKED</div>' : '<div style="color: #10b981; font-size: 10px; margin-top: 5px;"><i class="fas fa-check"></i> UNLOCKED</div>'}
-                            </div>
-                        </div>
-                    `;
-        }).join('')}
-                    </div>
-                </div>
-        `;
-    }
-
-    installTheme(themeName) {
-        const theme = this.availableThemes.find(t => t.name === themeName);
-        if (theme) {
-            this.currentUser.theme = themeName;
-            this.saveUserData();
-            this.applyTheme(themeName);
-            this.showNotification(`Theme applied: ${themeName} `, 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        }
-    }
-
-    applyTheme(themeName) {
-        const theme = this.availableThemes.find(t => t.name === themeName) || this.availableThemes[0];
-        const root = document.documentElement;
-        for (const [key, value] of Object.entries(theme.colors)) {
-            root.style.setProperty(key, value);
-        }
-    }
-
-    renderProfileContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Profile Settings</h2>
-                <div class="glass-card">
-                    <div class="profile-edit-header">
-                        <div class="profile-avatar-edit">
-                            ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : '<i class="fas fa-user"></i>'}
-                        </div>
-                        <div>
-                            <h3>${this.currentUser.username}</h3>
-                            <p style="color: var(--text-secondary);">Rank: ${this.rank}</p>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Username</label>
-                        <input type="text" class="modern-input" value="${this.currentUser.username}" id="editUsername">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Avatar URL</label>
-                        <input type="text" class="modern-input" value="${this.currentUser.avatar || ''}" id="editAvatar" placeholder="https://example.com/avatar.jpg">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Profile Banner URL</label>
-                        <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/banner.jpg">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Bio</label>
-                        <textarea class="modern-input" id="editBio" rows="3" placeholder="Tell us about yourself...">${this.currentUser.bio || ''}</textarea>
-                    </div>
-
-                    <div style="margin-top: 20px;">
-                        <label style="display: block; margin-bottom: 10px;">Theme Selection</label>
-                        <div class="theme-grid">
-                            ${this.availableThemes.map(theme => `
-                        <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                            <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                                ${theme.name}
-                            </div>
-                            <div style="padding: 5px; text-align: center;">
-                                <div style="font-size: 10px; color: var(--text-secondary);">${theme.name}</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                        </div>
-                    </div>
-
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
-                </div>
-        `;
-    }
-
-    async saveProfile() {
-        const newUsername = document.getElementById('editUsername').value;
-        const newAvatar = document.getElementById('editAvatar').value;
-        const newBanner = document.getElementById('editBanner').value;
-        const newBio = document.getElementById('editBio').value;
-
-        if (newUsername) this.currentUser.username = newUsername;
-        this.currentUser.avatar = newAvatar;
-        this.currentUser.banner = newBanner;
-        this.currentUser.bio = newBio;
-
-        if (this.supabase && this.currentUser.key) {
-            const { error } = await this.supabase
-                .from('keys')
-                .update({
-                    avatar_url: newAvatar,
-                    banner_url: newBanner,
-                    bio: newBio
-                })
-                .eq('key', this.currentUser.key);
-
-            if (error) {
-                console.error('Error saving profile:', error);
-                this.showNotification('Failed to save to cloud', 'error');
-            }
-        }
-
-        this.saveUserData();
-        this.showNotification('Profile updated!', 'success');
-
-        if (this.supabase) {
-            const { data: keyData } = await this.supabase
-                .from('keys')
-                .select('*')
-                .eq('key', this.currentUser.key)
-                .single();
-            if (keyData) this.renderPortal(keyData);
-        } else {
-            this.renderPortal({ ...this.currentUser, status: 'active' });
-        }
-    }
-
-    renderSupportContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Support</h2>
-            <div class="support-widget">
-                <i class="fab fa-discord" style="font-size: 48px; margin-bottom: 15px;"></i>
-                <h3>Need Help?</h3>
-                <p style="margin-bottom: 20px;">Join our Discord server for 24/7 support and updates.</p>
-                <button class="btn-primary" style="background: white; color: #5865F2; width: auto;" onclick="window.open('https://discord.gg/quantum', '_blank')">Join Discord</button>
-            </div>
-            
-            <div class="glass-card" style="margin-top: 20px;">
-                <h3><i class="fas fa-robot"></i> AI Assistant</h3>
-                <div id="aiChatBox" style="height: 200px; overflow-y: auto; margin: 15px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                    <div style="color: var(--text-secondary);">Quantum AI: How can I help you today?</div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="aiInput" class="modern-input" placeholder="Ask about scripts, key system..." style="margin-bottom: 0;" onkeypress="if(event.key === 'Enter') window.userPortal.askAI()">
-                    <button class="btn-primary" style="width: auto;" onclick="window.userPortal.askAI()">Ask</button>
-                </div>
-            </div>
-        `;
-    }
-
-    askAI() {
-        const input = document.getElementById('aiInput');
-        const question = input.value.trim();
-        if (!question) return;
-
-        const chatBox = document.getElementById('aiChatBox');
-        chatBox.innerHTML += `<div style="margin-top: 10px; text-align: right; color: var(--text-primary);">You: ${question}</div>`;
-        input.value = '';
-
-        // Simulate AI Response
-        setTimeout(() => {
-            let answer = "I'm not sure about that yet.";
-            if (question.toLowerCase().includes('key')) answer = "Keys are generated by admins. You can buy one in our Discord.";
-            if (question.toLowerCase().includes('script')) answer = "You can find scripts in the 'My Scripts' tab or generate one in 'Script Gen'.";
-            if (question.toLowerCase().includes('hello')) answer = "Hello! I am the Quantum AI Assistant.";
-
-            chatBox.innerHTML += `<div style="margin-top: 10px; color: var(--accent-color);">Quantum AI: ${answer}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }, 1000);
-    }
-
-    votePoll(optionId) {
-        if (this.pollData.userVoted) {
-            this.showNotification('You have already voted!', 'warning');
-            return;
-        }
-
-        const option = this.pollData.options.find(o => o.id === optionId);
-        if (option) {
-            option.votes++;
-            this.pollData.userVoted = true;
-            localStorage.setItem('quantum_poll_data_v2', JSON.stringify(this.pollData));
-            this.showNotification('Vote recorded!', 'success');
-            this.renderPortal(this.keys.find(k => k.key === this.currentUser.key));
-        }
-    }
-
-    generateScript() {
-        const ws = document.getElementById('genWalkSpeed').value || 16;
-        const jp = document.getElementById('genJumpPower').value || 50;
-        const esp = document.getElementById('genEsp').checked;
-        const aimbot = document.getElementById('genAimbot').checked;
-        const infJump = document.getElementById('genInfiniteJump').checked;
-
-        let script = `-- Generated by Quantum Portal\n\n`;
-        script += `local plr = game.Players.LocalPlayer\n`;
-        script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
-
-        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws} \n`;
-        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp} \n`;
-
-        if (infJump) {
-            script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
-        }
-
-        if (esp) {
-            script += `\n-- Simple ESP\nfor _, p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1, 0, 0)\n    end\nend\n`;
-        }
-
-        if (aimbot) {
-            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _, p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
-        }
-
-        document.getElementById('genOutput').value = script;
-        this.showNotification('Script Generated!', 'success');
-    }
 
     copyGeneratedScript() {
         const output = document.getElementById('genOutput');
@@ -1935,19 +1712,31 @@ class UserPortal {
     async fetchAnnouncement() {
         if (!this.supabase) return;
 
-        const { data, error } = await this.supabase
-            .from('announcements')
-            .select('*')
-            .eq('active', true)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+        try {
+            const { data, error } = await this.supabase
+                .from('announcements')
+                .select('*')
+                .eq('active', true)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-        if (data) {
-            const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-            if (!dismissed.includes(data.id.toString())) {
-                this.renderAnnouncement(data);
+            if (error) {
+                // Ignore 404/PGRST116 (no rows) errors as they are expected when no announcement exists
+                if (error.code !== 'PGRST116') {
+                    console.warn('Supabase announcement error:', error);
+                }
+                return;
             }
+
+            if (data) {
+                const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+                if (!dismissed.includes(data.id.toString())) {
+                    this.renderAnnouncement(data);
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to fetch announcements:', err);
         }
     }
 
@@ -1971,26 +1760,26 @@ class UserPortal {
         const toast = document.createElement('div');
         toast.id = 'global-announcement-toast';
         toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(20, 20, 30, 0.95);
-            border-left: 4px solid ${colors[announcement.type] || colors.info};
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 10000;
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            max-width: 400px;
-            backdrop-filter: blur(10px);
-            transform: translateX(100%);
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(20, 20, 30, 0.95);
+        border - left: 4px solid ${ colors[announcement.type] || colors.info };
+        padding: 15px 20px;
+        border - radius: 8px;
+        box - shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z - index: 10000;
+        display: flex;
+        align - items: flex - start;
+        gap: 15px;
+        max - width: 400px;
+        backdrop - filter: blur(10px);
+        transform: translateX(100 %);
+        transition: transform 0.5s cubic - bezier(0.68, -0.55, 0.27, 1.55);
         `;
 
         toast.innerHTML = `
-            <i class="fas ${icons[announcement.type] || icons.info}" style="color: ${colors[announcement.type] || colors.info}; font-size: 20px; margin-top: 2px;"></i>
+            < i class="fas ${icons[announcement.type] || icons.info}" style = "color: ${colors[announcement.type] || colors.info}; font-size: 20px; margin-top: 2px;" ></i >
             <div style="flex: 1;">
                 <div style="font-weight: bold; margin-bottom: 5px; color: white;">Announcement</div>
                 <div style="color: #ccc; font-size: 14px; line-height: 1.4;">${announcement.message}</div>
@@ -2045,7 +1834,7 @@ class UserPortal {
                 this.vx = (Math.random() - 0.5) * 0.5;
                 this.vy = (Math.random() - 0.5) * 0.5;
                 this.size = Math.random() * 2;
-                this.color = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+                this.color = `rgba(255, 255, 255, ${ Math.random() * 0.5 })`;
             }
 
             update() {
@@ -2087,7 +1876,7 @@ class UserPortal {
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < 100) {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 100)})`;
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${ 0.1 * (1 - dist / 100) })`;
                         ctx.lineWidth = 0.5;
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
@@ -2125,7 +1914,7 @@ class UserPortal {
 
     viewScript(index) {
         const script = this.scripts[index];
-        alert(`Script: ${script.name}\n\n${script.content}`);
+        alert(`Script: ${ script.name } \n\n${ script.content } `);
     }
 
     copyScript(index) {
@@ -2136,7 +1925,7 @@ class UserPortal {
     }
 
     copyLoaderScript() {
-        const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
+        const loader = `loadstring(game: HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
         navigator.clipboard.writeText(loader).then(() => {
             this.showNotification('Loader copied to clipboard!', 'success');
         });
@@ -2144,10 +1933,10 @@ class UserPortal {
 
     executeScript(index) {
         const script = this.scripts[index];
-        this.showNotification(`Executing: ${script.name}...`, 'info');
+        this.showNotification(`Executing: ${ script.name }...`, 'info');
         // Simulate WebSocket execution
         setTimeout(() => {
-            this.showNotification(`Successfully executed ${script.name} in-game!`, 'success');
+            this.showNotification(`Successfully executed ${ script.name } in -game!`, 'success');
         }, 1000);
     }
 
@@ -2164,8 +1953,8 @@ class UserPortal {
 
         const notif = document.createElement('div');
         notif.className = 'notification';
-        notif.style.borderLeft = `4px solid ${colors[type]}`;
-        notif.innerHTML = `<i class="fas ${icons[type]}" style="color: ${colors[type]}"></i> ${message}`;
+        notif.style.borderLeft = `4px solid ${ colors[type] } `;
+        notif.innerHTML = `< i class="fas ${icons[type]}" style = "color: ${colors[type]}" ></i > ${ message } `;
 
         document.body.appendChild(notif);
 
