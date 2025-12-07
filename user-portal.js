@@ -569,7 +569,7 @@ class UserPortal {
                 <div class="glass-card">
                     <div class="brand-header">
                         <div class="brand-logo" style="width: 60px; height: 60px; margin: 0 auto 15px auto;">
-                            <img src="assets/logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            <img src="logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <h1 class="brand-title">Quantum Portal</h1>
                         <p style="color: var(--text-secondary); font-size: 14px; margin-top: 5px;">Enter your access key to continue</p>
@@ -668,7 +668,7 @@ class UserPortal {
                 <div class="portal-sidebar">
                     <div class="brand-header" style="margin-bottom: 40px; text-align: left;">
                         <div class="brand-logo" style="width: 40px; height: 40px; margin: 0 0 10px 0;">
-                            <img src="assets/logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            <img src="logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <h2 class="brand-title" style="font-size: 20px;">Quantum</h2>
                     </div>
