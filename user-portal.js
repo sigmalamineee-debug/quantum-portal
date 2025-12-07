@@ -1,10 +1,21 @@
 
 class UserPortal {
     constructor() {
-        // Initialize Supabase
-        const SUPABASE_URL = 'https://ausifkhslbkvgyskwrps.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1c2lma2hzbGJrdmd5c2t3cnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMTA2NjYsImV4cCI6MjA4MDU4NjY2Nn0.yovv7wZKSZaykq2Hms6UWvFYy30LUXy68qEAHu5MU3c';
-        this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Initialize Supabase (with error handling)
+        try {
+            if (window.supabase) {
+                const SUPABASE_URL = 'https://ausifkhslbkvgyskwrps.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1c2lma2hzbGJrdmd5c2t3cnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMTA2NjYsImV4cCI6MjA4MDU4NjY2Nn0.yovv7wZKSZaykq2Hms6UWvFYy30LUXy68qEAHu5MU3c';
+                this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase initialized successfully');
+            } else {
+                console.warn('Supabase library not loaded, falling back to localStorage');
+                this.supabase = null;
+            }
+        } catch (error) {
+            console.error('Failed to initialize Supabase:', error);
+            this.supabase = null;
+        }
 
         this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
         this.currentUser = JSON.parse(localStorage.getItem('user_auth_session')) || null;
@@ -622,14 +633,32 @@ class UserPortal {
             return;
         }
 
-        // Fetch key from Supabase
-        const { data: keyData, error } = await this.supabase
-            .from('keys')
-            .select('*')
-            .eq('key', keyStr)
-            .single();
+        let keyData = null;
 
-        if (error || !keyData) {
+        // Try Supabase first, fall back to localStorage
+        if (this.supabase) {
+            try {
+                const { data, error } = await this.supabase
+                    .from('keys')
+                    .select('*')
+                    .eq('key', keyStr)
+                    .single();
+
+                if (!error && data) {
+                    keyData = data;
+                }
+            } catch (err) {
+                console.error('Supabase fetch error:', err);
+            }
+        }
+
+        // Fallback to localStorage if Supabase failed or unavailable
+        if (!keyData) {
+            this.keys = JSON.parse(localStorage.getItem('admin_keys')) || [];
+            keyData = this.keys.find(k => k.key === keyStr);
+        }
+
+        if (!keyData) {
             this.showNotification('Invalid Key', 'error');
             return;
         }
