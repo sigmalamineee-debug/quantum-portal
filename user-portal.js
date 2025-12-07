@@ -1974,38 +1974,6 @@ class UserPortal {
         output.value = script;
 
         // Add typing animation effect
-        output.style.opacity = '0.5';
-        setTimeout(() => output.style.opacity = '1', 200);
-    }
-
-    renderMarketplaceContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Theme Marketplace</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="themeCodeInput" class="modern-input" placeholder="Enter Code (Rank or Theme)..." style="margin-bottom: 0;">
-                <button class="btn-primary" style="width: auto;" onclick="window.userPortal.redeemCode()">Redeem</button>
-            </div>
-            
-            <div class="theme-grid">
-                ${this.availableThemes.map(theme => `
-                    <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                        <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                            ${theme.name}
-                        </div>
-                        <div style="padding: 10px; text-align: center;">
-                            <div style="font-weight: bold; font-size: 14px;">${theme.name}</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">${theme.author}</div>
-                            <div style="font-size: 10px; color: var(--accent-color); margin-top: 5px;">FREE</div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    redeemCode() {
-        const input = document.getElementById('themeCodeInput');
-        const code = input.value.trim().toUpperCase();
         if (!code) return;
 
         // Rank Codes
@@ -2188,11 +2156,17 @@ class UserPortal {
                     <div class="theme-grid">
                         ${this.availableThemes.map(theme => `
                             <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                                <div class="theme-preview" style="background: ${theme.colors['--bg-primary']}; color: ${theme.colors['--text-primary']}; border: 1px solid ${theme.colors['--accent-color']};">
-                                    ${theme.name}
+                                <div class="theme-preview-wrapper" style="background: ${theme.colors['--bg-primary']};">
+                                    ${theme.background ?
+                `<div class="theme-bg-image" style="background-image: url('${theme.background}');"></div>` :
+                `<div class="theme-bg-color" style="background: linear-gradient(135deg, ${theme.colors['--bg-primary']}, ${theme.colors['--bg-secondary']});"></div>`
+            }
+                                    <div class="theme-overlay">
+                                        <i class="fas fa-check-circle" style="font-size: 24px; color: white;"></i>
+                                    </div>
                                 </div>
-                                <div style="padding: 5px; text-align: center;">
-                                    <div style="font-size: 10px; color: var(--text-secondary);">${theme.name}</div>
+                                <div style="padding: 10px; text-align: center;">
+                                    <div style="font-weight: bold; font-size: 12px;">${theme.name.replace(/_/g, ' ')}</div>
                                 </div>
                             </div>
                         `).join('')}
