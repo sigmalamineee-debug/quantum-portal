@@ -65,8 +65,10 @@ body::before {
 }
 
 .ui-container {
-    width: 1000px;
-    height: 680px;
+    width: 95%;
+    max-width: 1000px;
+    height: 90vh;
+    max-height: 680px;
     background: var(--color-surface);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -688,4 +690,102 @@ body::before {
     font-size: 16px;
     color: var(--color-text-secondary);
     max-width: 400px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .ui-container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        max-height: none;
+    }
+
+    .content-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .sidebar-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 80px;
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .sidebar-header-text {
+        display: none;
+    }
+
+    .category-btn {
+        flex-direction: column;
+        height: auto;
+        padding: 8px;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .category-btn .icon {
+        margin-right: 0;
+        margin-bottom: 4px;
+        font-size: 20px;
+    }
+
+    .category-btn .label {
+        font-size: 10px;
+    }
+
+    .category-btn.active::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        width: 50%;
+        height: 3px;
+        transform: translateX(-50%);
+        border-radius: 3px 3px 0 0;
+    }
+
+    .main-content {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+
+    .section:nth-child(3),
+    .section:nth-child(4) {
+        grid-column: 1;
+    }
+
+    .header {
+        padding: 0 15px;
+    }
+
+    .title {
+        font-size: 18px;
+    }
+
+    .user-info-bar {
+        padding: 0 15px;
+        gap: 10px;
+    }
+
+    .stats {
+        gap: 10px;
+    }
+
+    .stat-value {
+        font-size: 14px;
+    }
 }

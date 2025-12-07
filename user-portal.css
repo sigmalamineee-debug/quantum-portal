@@ -1160,12 +1160,14 @@ body {
         opacity: 1;
     }
 }
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .portal-layout {
         flex-direction: column;
-        height: auto;
-        min-height: 100vh;
+        height: 100dvh;
+        /* Use dynamic viewport height for mobile */
+        min-height: 100dvh;
     }
 
     .portal-sidebar {
@@ -1173,46 +1175,109 @@ body {
         height: auto;
         border-right: none;
         border-bottom: 1px solid var(--glass-border);
-        padding: 15px;
+        padding: 10px;
+        flex-shrink: 0;
+        background: rgba(26, 29, 35, 0.95);
+        /* Slightly more opaque for readability */
+        z-index: 100;
     }
 
     .portal-nav {
         display: flex;
         overflow-x: auto;
-        padding-bottom: 10px;
-        gap: 10px;
+        padding-bottom: 5px;
+        gap: 8px;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* Hide scrollbar for cleaner look */
+    }
+
+    .portal-nav::-webkit-scrollbar {
+        display: none;
     }
 
     .nav-item {
         white-space: nowrap;
         margin-bottom: 0;
         flex-shrink: 0;
+        padding: 8px 12px;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-item i {
+        font-size: 14px;
     }
 
     .portal-content {
         padding: 15px;
-        overflow-y: visible;
+        overflow-y: auto;
+        height: 100%;
+        /* Ensure it takes remaining height */
     }
 
-    .stats-grid, .script-grid, .news-grid, .pricing-grid {
+    .stats-grid,
+    .script-grid,
+    .news-grid,
+    .pricing-grid {
         grid-template-columns: 1fr;
     }
 
     .brand-header {
-        margin-bottom: 20px;
-        text-align: center !important;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
-    
+
     .brand-logo {
-        margin: 0 auto 10px auto !important;
+        width: 32px;
+        height: 32px;
+        margin: 0 !important;
+        font-size: 16px;
+    }
+
+    .brand-title {
+        font-size: 18px;
+        margin-bottom: 0;
     }
 
     .user-profile {
-        display: none; /* Hide profile in sidebar on mobile to save space, relies on Profile tab */
+        display: none;
+        /* Hide profile in sidebar on mobile */
     }
-    
+
     .pricing-container {
         padding: 10px;
+    }
+
+    /* Adjust specific components for mobile */
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dashboard-header .user-profile {
+        display: flex;
+        /* Show profile in dashboard header if needed, or keep hidden */
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .script-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .script-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
 }
