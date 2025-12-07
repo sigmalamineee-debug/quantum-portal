@@ -6,21 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const FPS_TARGET = 240;
     const PING_BASE = 90;
 
-    // --- DOM Elements ---
-    const toggles = document.querySelectorAll('.toggle-btn');
-    const sliders = document.querySelectorAll('.slider-container');
-    const categoryBtns = document.querySelectorAll('.category-btn');
-    const contentSections = document.querySelectorAll('.section');
-    const closeBtn = document.querySelector('.close-btn');
-    const uiContainer = document.querySelector('.ui-container');
-    const header = document.querySelector('.header');
-    const fpsDisplay = document.getElementById('fpsValue');
-    const pingDisplay = document.getElementById('pingValue');
-    const expiryDisplay = document.getElementById('expiry');
-    const mainContent = document.querySelector('.main-content');
-    const inDevelopment = document.querySelector('.in-development');
-
-    // --- Expiry Logic ---
     function updateExpiry() {
         if (!expiryDisplay) return;
 
@@ -34,6 +19,33 @@ document.addEventListener('DOMContentLoaded', () => {
             case '1M': durationMs = 30 * 24 * 60 * 60 * 1000; break;
             case 'LT': durationMs = -1; break; // Lifetime
             default: durationMs = 24 * 60 * 60 * 1000;
+        }
+
+        // Check for preview mode data first
+        const previewMode = localStorage.getItem('quantum_preview_mode');
+        const previewExpiry = localStorage.getItem('quantum_preview_expiry');
+
+        if (previewMode === 'true' && previewExpiry) {
+            if (previewExpiry === 'LT') {
+                expiryDisplay.textContent = "Expiry: Lifetime";
+                return;
+            }
+            // If it's a timestamp
+            const expiryTime = parseInt(previewExpiry);
+            if (!isNaN(expiryTime)) {
+                const now = Date.now();
+                const remaining = expiryTime - now;
+                if (remaining <= 0) {
+                    expiryDisplay.textContent = "Expiry: Expired";
+                } else {
+                    const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                    expiryDisplay.textContent = `Expiry: ${days}d, ${hours}h, ${minutes}m, ${seconds}s`;
+                }
+                return;
+            }
         }
 
         if (durationMs === -1) {

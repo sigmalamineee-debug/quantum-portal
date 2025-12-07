@@ -599,17 +599,10 @@ class UserPortal {
         });
     }
 
-    copyDeviceHwid() {
+    async copyDeviceHwid() {
         navigator.clipboard.writeText(this.deviceHwid).then(() => {
             this.showNotification('HWID copied to clipboard!', 'success');
         });
-    }
-
-    previewUI() {
-        window.open('index2.html', '_blank');
-    }
-
-    async handleLogin() {
         // Supabase Integration
         this.supabase = window.supabaseClient;
         if (!this.supabase) {
