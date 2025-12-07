@@ -10,6 +10,7 @@ if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', () => {
         if (window.supabase && window.supabase.createClient) {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClient = supabaseClient; // Make it globally available
             console.log('Supabase client initialized successfully');
         } else {
             console.error('Supabase library not loaded');
