@@ -886,7 +886,7 @@ class UserPortal {
                     <button class="get-script-btn" onclick="window.userPortal.copyLoaderScript()">
                         <i class="fas fa-copy"></i> Get Script
                     </button>
-                    <button class="get-script-btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);" onclick="window.location.href='index.html'">
+                    <button class="get-script-btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);" onclick="window.userPortal.previewUI()">
                         <i class="fas fa-eye"></i> Preview UI
                     </button>
                 </div>
