@@ -1764,22 +1764,22 @@ class UserPortal {
         top: 20px;
         right: 20px;
         background: rgba(20, 20, 30, 0.95);
-        border - left: 4px solid ${ colors[announcement.type] || colors.info };
+        border-left: 4px solid ${ colors[announcement.type] || colors.info };
         padding: 15px 20px;
-        border - radius: 8px;
-        box - shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        z - index: 10000;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 10000;
         display: flex;
-        align - items: flex - start;
+        align-items: flex - start;
         gap: 15px;
-        max - width: 400px;
-        backdrop - filter: blur(10px);
-        transform: translateX(100 %);
-        transition: transform 0.5s cubic - bezier(0.68, -0.55, 0.27, 1.55);
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+        transform: translateX(100%);
+        transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         `;
 
         toast.innerHTML = `
-            < i class="fas ${icons[announcement.type] || icons.info}" style = "color: ${colors[announcement.type] || colors.info}; font-size: 20px; margin-top: 2px;" ></i >
+            <i class="fas ${icons[announcement.type] || icons.info}" style = "color: ${colors[announcement.type] || colors.info}; font-size: 20px; margin-top: 2px;" ></i>
             <div style="flex: 1;">
                 <div style="font-weight: bold; margin-bottom: 5px; color: white;">Announcement</div>
                 <div style="color: #ccc; font-size: 14px; line-height: 1.4;">${announcement.message}</div>
@@ -1954,7 +1954,7 @@ class UserPortal {
         const notif = document.createElement('div');
         notif.className = 'notification';
         notif.style.borderLeft = `4px solid ${ colors[type] } `;
-        notif.innerHTML = `< i class="fas ${icons[type]}" style = "color: ${colors[type]}" ></i > ${ message } `;
+        notif.innerHTML = `<i class="fas ${icons[type]}" style = "color: ${colors[type]}" ></i> ${ message } `;
 
         document.body.appendChild(notif);
 
