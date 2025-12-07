@@ -629,6 +629,7 @@ class UserPortal {
     }
 
     renderPortal(keyData) {
+        this.currentKeyData = keyData; // Persist key data for re-renders
         // Ban Check
         const blacklist = JSON.parse(localStorage.getItem('quantum_blacklist') || '[]');
         if (this.currentUser && blacklist.includes(this.currentUser.username)) {
@@ -1603,45 +1604,105 @@ class UserPortal {
     }
 
     renderGeneratorContent() {
+        if (!this.aiChatHistory) {
+            this.aiChatHistory = [{
+                role: 'system',
+                text: "Hello! I'm Quantum AI 🤖. Ask me to create a script for you! Try saying 'Make a fly script' or 'Give me speed'."
+            }];
+        }
+
         return `
-            <h2 style="margin-bottom: 20px;">Script Generator</h2>
-            <div class="glass-card">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <h3 style="margin-bottom: 15px;">Features</h3>
-                        <div class="input-group">
-                            <label>WalkSpeed</label>
-                            <input type="number" id="genWalkSpeed" class="modern-input" value="16">
-                        </div>
-                        <div class="input-group">
-                            <label>JumpPower</label>
-                            <input type="number" id="genJumpPower" class="modern-input" value="50">
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genEsp"> ESP (Wallhack)
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genAimbot"> Aimbot
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="genInfiniteJump"> Infinite Jump
-                            </label>
-                        </div>
-                        <button class="btn-primary" onclick="window.userPortal.generateScript()">
-                            <i class="fas fa-bolt"></i> Generate Script
-                        </button>
+            <div class="ai-interface" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="ai-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00C6FF, #0072FF); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0, 198, 255, 0.3);">
+                        <i class="fas fa-robot" style="font-size: 24px; color: white;"></i>
                     </div>
                     <div>
-                        <h3 style="margin-bottom: 15px;">Output</h3>
-                        <textarea id="genOutput" class="modern-input" style="height: 300px; font-family: monospace;" readonly placeholder="Generated script will appear here..."></textarea>
-                        <button class="btn-primary" style="margin-top: 10px; background: rgba(255,255,255,0.1);" onclick="window.userPortal.copyGeneratedScript()">
-                            <i class="fas fa-copy"></i> Copy to Clipboard
-                        </button>
+                        <h2 style="margin: 0;">Quantum AI</h2>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 12px;">Powered by Lua-7B Model</p>
                     </div>
+                </div>
+
+                <div class="ai-chat-window glass-card" id="aiChatWindow" style="flex-grow: 1; margin-bottom: 20px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; max-height: 500px;">
+                    ${this.aiChatHistory.map(msg => `
+                        <div class="ai-message ${msg.role}" style="align-self: ${msg.role === 'user' ? 'flex-end' : 'flex-start'}; max-width: 80%; ${msg.role === 'user' ? 'background: rgba(0, 198, 255, 0.2); border: 1px solid rgba(0, 198, 255, 0.3);' : 'background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);'} padding: 15px; border-radius: 12px;">
+                            <div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">${msg.role === 'user' ? 'You' : 'Quantum AI'}</div>
+                            <div style="white-space: pre-wrap; font-family: ${msg.isCode ? 'monospace' : 'inherit'}; font-size: ${msg.isCode ? '12px' : '14px'};">${msg.text}</div>
+                            ${msg.isCode ? `
+                                <button class="btn-primary" style="margin-top: 10px; padding: 5px 10px; font-size: 12px; width: auto;" onclick="window.userPortal.copyToClipboard(\`${encodeURIComponent(msg.text)}\`)">
+                                    <i class="fas fa-copy"></i> Copy Code
+                                </button>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="ai-input-area" style="display: flex; gap: 10px;">
+                    <input type="text" id="aiInput" class="modern-input" placeholder="Describe the script you want..." style="margin-bottom: 0;" onkeypress="if(event.key === 'Enter') window.userPortal.handleAIInput()">
+                    <button class="btn-primary" style="width: auto; padding: 0 25px;" onclick="window.userPortal.handleAIInput()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         `;
+    }
+
+    async handleAIInput() {
+        const input = document.getElementById('aiInput');
+        const prompt = input.value.trim();
+        if (!prompt) return;
+
+        // Add User Message
+        this.aiChatHistory.push({ role: 'user', text: prompt });
+        this.renderPortal(this.currentKeyData || {}); // Re-render to show message
+
+        // Simulate Thinking
+        setTimeout(() => {
+            const response = this.generateLuaResponse(prompt);
+            this.aiChatHistory.push(response);
+            this.renderPortal(this.currentKeyData || {});
+
+            // Scroll to bottom
+            setTimeout(() => {
+                const chatWindow = document.getElementById('aiChatWindow');
+                if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+            }, 100);
+        }, 800);
+    }
+
+    generateLuaResponse(prompt) {
+        const p = prompt.toLowerCase();
+        let code = "";
+        let text = "Here is the script you requested:";
+
+        if (p.includes('fly')) {
+            code = `loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()`;
+        } else if (p.includes('speed') || p.includes('walkspeed')) {
+            const speed = p.match(/\d+/) ? p.match(/\d+/)[0] : "100";
+            code = `getgenv().WalkSpeedValue = ${speed};\nlocal Player = game:GetService("Players").LocalPlayer;\nPlayer.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue;\n\nPlayer.Character.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()\n    if Player.Character.Humanoid.WalkSpeed ~= getgenv().WalkSpeedValue then\n        Player.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue;\n    end\nend);`;
+        } else if (p.includes('jump') || p.includes('jumppower')) {
+            const jump = p.match(/\d+/) ? p.match(/\d+/)[0] : "100";
+            code = `game.Players.LocalPlayer.Character.Humanoid.JumpPower = ${jump}`;
+        } else if (p.includes('esp') || p.includes('wallhack')) {
+            code = `local FillColor = Color3.fromRGB(175,255,175)\nlocal DepthMode = "AlwaysOnTop"\nlocal FillTransparency = 0.5\nlocal OutlineColor = Color3.fromRGB(255,255,255)\nlocal OutlineTransparency = 0\n\nlocal CoreGui = game:GetService("CoreGui")\nlocal Players = game:GetService("Players")\nlocal lp = Players.LocalPlayer\nlocal connections = {}\n\nlocal Storage = Instance.new("Folder")\nStorage.Parent = CoreGui\nStorage.Name = "Highlight_Storage"\n\nlocal function Highlight(plr)\n    local Highlight = Instance.new("Highlight")\n    Highlight.Name = plr.Name\n    Highlight.FillColor = FillColor\n    Highlight.DepthMode = DepthMode\n    Highlight.FillTransparency = FillTransparency\n    Highlight.OutlineColor = OutlineColor\n    Highlight.OutlineTransparency = 0\n    Highlight.Parent = Storage\n    \n    local plrchar = plr.Character\n    if plrchar then\n        Highlight.Adornee = plrchar\n    end\n\n    connections[plr] = plr.CharacterAdded:Connect(function(char)\n        Highlight.Adornee = char\n    end)\nend\n\nPlayers.PlayerAdded:Connect(Highlight)\nfor i,v in next, Players:GetPlayers() do\n    Highlight(v)\nend`;
+        } else if (p.includes('teleport') || p.includes('tp')) {
+            code = `local Plr = game:GetService("Players").LocalPlayer\nlocal Char = Plr.Character\nChar:MoveTo(Vector3.new(0, 50, 0)) -- Change coordinates here`;
+        } else if (p.includes('btools')) {
+            code = `Instance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = 4\nInstance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = 3\nInstance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = 1`;
+        } else if (p.includes('inf') && p.includes('jump')) {
+            code = `local InfiniteJumpEnabled = true\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n\tif InfiniteJumpEnabled then\n\t\tgame:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")\n\tend\nend)`;
+        } else {
+            return { role: 'system', text: "I'm not sure how to generate that specific script yet. Try asking for 'fly', 'speed', 'jump', 'esp', or 'btools'!", isCode: false };
+        }
+
+        return { role: 'system', text: code, isCode: true };
+    }
+
+    copyToClipboard(text) {
+        const decoded = decodeURIComponent(text);
+        navigator.clipboard.writeText(decoded).then(() => {
+            this.showNotification('Code copied to clipboard!', 'success');
+        });
     }
 
     renderMarketplaceContent() {
