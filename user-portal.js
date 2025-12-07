@@ -579,8 +579,11 @@ class UserPortal {
                     <button id="loginBtn" class="btn-primary" style="margin-bottom: 15px;">
                         Access Dashboard <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
                     </button>
-                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px;" onclick="window.userPortal.copyDeviceHwid()">
+                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px; margin-bottom: 10px;" onclick="window.userPortal.copyDeviceHwid()">
                         <i class="fas fa-fingerprint"></i> Copy HWID
+                    </button>
+                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px;" onclick="window.userPortal.previewUI()">
+                        <i class="fas fa-eye"></i> Preview UI
                     </button>
                     <div style="text-align: center; margin-top: 20px;">
                         <a href="https://discord.gg/KjuYafU7UB" target="_blank" style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Don't have a key? Purchase here</a>
@@ -599,6 +602,10 @@ class UserPortal {
         navigator.clipboard.writeText(this.deviceHwid).then(() => {
             this.showNotification('HWID copied to clipboard!', 'success');
         });
+    }
+
+    previewUI() {
+        window.open('index2.html', '_blank');
     }
 
     handleLogin() {
