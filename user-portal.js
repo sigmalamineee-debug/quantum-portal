@@ -1301,6 +1301,22 @@ class UserPortal {
                 msg: m.message,
                 time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }));
+            // Add connection success message locally
+            this.chatMessages.push({
+                user: 'System',
+                rank: 'System',
+                msg: 'Connected to Global Chat. Fetched ' + data.length + ' messages.',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            this.refreshChatDisplay();
+        } else if (error) {
+            console.error('Chat Init Error:', error);
+            this.chatMessages.push({
+                user: 'System',
+                rank: 'Error',
+                msg: 'Failed to connect: ' + error.message + '. Check RLS policies.',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
             this.refreshChatDisplay();
         }
 
