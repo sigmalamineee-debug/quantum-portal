@@ -71,7 +71,8 @@ class UserPortal {
         this.initCursorTrails();
 
         // Global Announcement
-        this.announcement = "📢 WELCOME TO QUANTUM PORTAL V2.5! NEW FEATURES ADDED: SCRIPT GENERATOR, AI ASSISTANT, AND MORE! 🎉";
+        const savedAnnouncement = JSON.parse(localStorage.getItem('admin_announcement'));
+        this.announcement = savedAnnouncement ? savedAnnouncement.message : "📢 WELCOME TO QUANTUM PORTAL V2.5! NEW FEATURES ADDED: SCRIPT GENERATOR, AI ASSISTANT, AND MORE! 🎉";
 
         // Poll Data
         // Poll Data
