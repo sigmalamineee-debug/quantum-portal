@@ -19,38 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case '1M': durationMs = 30 * 24 * 60 * 60 * 1000; break;
             case 'LT': durationMs = -1; break; // Lifetime
             default: durationMs = 24 * 60 * 60 * 1000;
-        }
-
-        // Check for preview mode data first
-        const previewMode = localStorage.getItem('quantum_preview_mode');
-        const previewExpiry = localStorage.getItem('quantum_preview_expiry');
-
-        if (previewMode === 'true' && previewExpiry) {
-            if (previewExpiry === 'LT') {
-                expiryDisplay.textContent = "Expiry: Lifetime";
                 return;
-            }
-            // If it's a timestamp
-            const expiryTime = parseInt(previewExpiry);
-            if (!isNaN(expiryTime)) {
-                const now = Date.now();
-                const remaining = expiryTime - now;
-                if (remaining <= 0) {
-                    expiryDisplay.textContent = "Expiry: Expired";
-                } else {
-                    const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-                    expiryDisplay.textContent = `Expiry: ${days}d, ${hours}h, ${minutes}m, ${seconds}s`;
-                }
-                return;
-            }
-        }
-
-        if (durationMs === -1) {
-            expiryDisplay.textContent = "Expiry: Lifetime";
-            return;
         }
 
         const expiryTime = activationTime + durationMs;
