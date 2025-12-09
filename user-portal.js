@@ -74,6 +74,7 @@ class UserPortal {
         // Initialize Visuals
         this.initBackground();
         this.initCursorTrails();
+        this.initAudioVisualizer(); // Initialize Visualizer
 
         // Global Announcement
         const savedAnnouncement = JSON.parse(localStorage.getItem('admin_announcement'));
@@ -294,25 +295,6 @@ class UserPortal {
             },
             {
                 name: "Glitch Protocol",
-                author: "System",
-                downloads: 3210,
-                type: 'premium',
-                code: 'SYSTEM_FAILURE',
-                colors: {
-                    '--bg-primary': '#000000',
-                    '--bg-secondary': '#111111',
-                    '--accent-color': '#ff0000',
-                    '--accent-glow': 'rgba(255, 0, 0, 0.5)',
-                    '--text-primary': '#ffffff',
-                    '--text-secondary': '#ff0000',
-                    '--font-family': "'Courier New', monospace"
-                },
-                previewColor: '#ff0000'
-            },
-            {
-                name: "Abyssal Void",
-                author: "DeepOne",
-                downloads: 1500,
                 type: 'premium',
                 code: 'DEEP_DIVE',
                 colors: {
@@ -2083,7 +2065,7 @@ class UserPortal {
         const app = document.getElementById('app');
         let bgVideo = document.getElementById('bgVideo');
 
-        if (theme.background && (theme.background.endsWith('.mp4') || theme.background.endsWith('.webm'))) {
+        if (theme.isVideo) {
             // Video Background
             if (!bgVideo) {
                 bgVideo = document.createElement('video');
@@ -2098,7 +2080,7 @@ class UserPortal {
                     width: 100%;
                     height: 100%;
                     object-fit: cover;
-                    z-index: -1;
+                    z-index: -2; /* Behind visualizer */
                     opacity: 0;
                     transition: opacity 1s ease;
                 `;
@@ -2127,144 +2109,108 @@ class UserPortal {
         }
     }
 
-    renderProfileContent() {
-        return `
-            <h2 style="margin-bottom: 20px;">Profile Settings</h2>
-            <div class="glass-card">
-                <div class="profile-edit-header">
-                    <div class="profile-avatar-edit" onclick="document.getElementById('avatarUpload').click()">
-                        ${this.currentUser.avatar ? `<img src="${this.currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : '<i class="fas fa-user"></i>'}
-                    </div>
-                    <div>
-                        <h3>${this.currentUser.username}</h3>
-                        <p style="color: var(--text-secondary);">Rank: ${this.rank}</p>
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" class="modern-input" value="${this.currentUser.username}" id="editUsername">
-                </div>
-                
-                <div class="input-group">
-                    <label>Profile Banner URL</label>
-                    <input type="text" class="modern-input" value="${this.currentUser.banner || ''}" id="editBanner" placeholder="https://example.com/image.jpg">
-                </div>
+    initAudioVisualizer() {
+        this.visualizerCanvas = document.createElement('canvas');
+        this.visualizerCanvas.id = 'audioVisualizer';
+        this.visualizerCanvas.width = window.innerWidth;
+        this.visualizerCanvas.height = window.innerHeight;
+        document.body.insertBefore(this.visualizerCanvas, document.body.firstChild); // Behind everything
 
-                <div style="margin-top: 20px;">
-                    <label style="display: block; margin-bottom: 10px;">Theme Selection</label>
-                    <div class="theme-grid">
-                        ${this.availableThemes.map(theme => `
-                            <div class="theme-card ${this.currentUser.theme === theme.name ? 'active' : ''}" onclick="window.userPortal.installTheme('${theme.name}')">
-                                <div class="theme-preview-wrapper" style="background: ${theme.colors['--bg-primary']};">
-                                    ${theme.background ?
-                `<div class="theme-bg-image" style="background-image: url('${theme.background}');"></div>` :
-                `<div class="theme-bg-color" style="background: linear-gradient(135deg, ${theme.colors['--bg-primary']}, ${theme.colors['--bg-secondary']});"></div>`
-            }
-                                    <div class="theme-overlay">
-                                        <i class="fas fa-check-circle" style="font-size: 24px; color: white;"></i>
-                                    </div>
-                                </div>
-                                <div style="padding: 10px; text-align: center;">
-                                    <div style="font-weight: bold; font-size: 12px;">${theme.name.replace(/_/g, ' ')}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 256;
 
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
-                    <h3 style="margin-bottom: 15px;">Visual Settings</h3>
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <label>Glassmorphism Opacity</label>
-                            <span id="glassOpacityValue">${localStorage.getItem('quantum_glass_opacity') || 0.7}</span>
-                        </div>
-                        <input type="range" min="0.1" max="1" step="0.05" value="${localStorage.getItem('quantum_glass_opacity') || 0.7}" 
-                            class="slider" 
-                            style="width: 100%;"
-                            oninput="window.userPortal.updateGlassOpacity(this.value)">
-                    </div>
+        // Connect audio player to analyser
+        this.source = this.audioContext.createMediaElementSource(this.audioPlayer);
+        this.source.connect(this.analyser);
+        this.source.connect(this.audioContext.destination);
 
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label>Audio Visualizer Background</label>
-                        <label class="switch">
-                            <input type="checkbox" id="visualizerToggle" ${localStorage.getItem('quantum_visualizer_enabled') !== 'false' ? 'checked' : ''} onchange="window.userPortal.toggleVisualizer(this.checked)">
-                            <span class="slider-round"></span>
-                        </label>
-                    </div>
-                </div>
+        this.bufferLength = this.analyser.frequencyBinCount;
+        this.dataArray = new Uint8Array(this.bufferLength);
 
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
-                    <h3 style="margin-bottom: 15px;">Security</h3>
-                    <button class="btn-primary" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;" onclick="window.userPortal.resetHWID()">
-                        <i class="fas fa-shield-alt"></i> Reset HWID Binding
-                    </button>
-                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">
-                        Allows you to use your key on a new device. Cooldown: 7 Days.
-                    </p>
-                </div>
+        this.visualizerEnabled = localStorage.getItem('quantum_visualizer_enabled') !== 'false';
+        if (this.visualizerEnabled) {
+            this.drawVisualizer();
+        } else {
+            this.visualizerCanvas.style.display = 'none';
+        }
 
-                <button class="btn-primary" style="margin-top: 20px;" onclick="window.userPortal.saveProfile()">Save Changes</button>
-            </div>
-        `;
-    }
-
-    updateGlassOpacity(value) {
-        document.documentElement.style.setProperty('--glass-opacity', value);
-        localStorage.setItem('quantum_glass_opacity', value);
-        const display = document.getElementById('glassOpacityValue');
-        if (display) display.textContent = value;
+        window.addEventListener('resize', () => {
+            this.visualizerCanvas.width = window.innerWidth;
+            this.visualizerCanvas.height = window.innerHeight;
+        });
     }
 
     toggleVisualizer(enabled) {
+        this.visualizerEnabled = enabled;
         localStorage.setItem('quantum_visualizer_enabled', enabled);
-        const canvas = document.getElementById('audioVisualizer');
-        if (canvas) {
-            canvas.style.display = enabled ? 'block' : 'none';
-        }
-        if (enabled && this.isPlaying) {
+
+        if (enabled) {
+            this.visualizerCanvas.style.display = 'block';
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
             this.drawVisualizer();
+        } else {
+            this.visualizerCanvas.style.display = 'none';
         }
     }
 
-    async resetHWID() {
-        if (!confirm("Are you sure you want to reset your HWID binding? This can only be done once every 7 days.")) return;
+    drawVisualizer() {
+        if (!this.visualizerEnabled) return;
 
-        try {
-            const { data: keyData, error } = await this.supabase
-                .from('keys')
-                .select('*')
-                .eq('key', this.currentUser.key)
-                .single();
+        requestAnimationFrame(() => this.drawVisualizer());
 
-            if (error) throw error;
+        const ctx = this.visualizerCanvas.getContext('2d');
+        const width = this.visualizerCanvas.width;
+        const height = this.visualizerCanvas.height;
 
-            const lastReset = keyData.last_hwid_reset ? new Date(keyData.last_hwid_reset).getTime() : 0;
-            const now = Date.now();
-            const cooldown = 7 * 24 * 60 * 60 * 1000;
+        this.analyser.getByteFrequencyData(this.dataArray);
 
-            if (now - lastReset < cooldown) {
-                const remaining = Math.ceil((cooldown - (now - lastReset)) / (1000 * 60 * 60 * 24));
-                alert(`Cooldown active. You can reset again in ${remaining} days.`);
-                return;
-            }
+        ctx.clearRect(0, 0, width, height);
 
-            const { error: updateError } = await this.supabase
-                .from('keys')
-                .update({
-                    hwid: null,
-                    last_hwid_reset: new Date().toISOString()
-                })
-                .eq('key', this.currentUser.key);
+        const barWidth = (width / this.bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
 
-            if (updateError) throw updateError;
+        for (let i = 0; i < this.bufferLength; i++) {
+            barHeight = this.dataArray[i] * 1.5; // Scale height
 
-            alert("HWID Reset Successful! You can now use your key on a new device.");
-            this.renderPortal(keyData); // Refresh UI
-        } catch (err) {
-            console.error("HWID Reset Error:", err);
-            alert("Failed to reset HWID: " + err.message);
+            // Dynamic Color based on theme accent or rainbow
+            const r = barHeight + (25 * (i / this.bufferLength));
+            const g = 250 * (i / this.bufferLength);
+            const b = 50;
+
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.5)`; // Semi-transparent
+            ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+
+            x += barWidth + 1;
+        }
+    }
+
+    resetHWID() {
+        const lastReset = localStorage.getItem('last_hwid_reset');
+        const now = Date.now();
+        const cooldown = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+        if (lastReset && (now - parseInt(lastReset)) < cooldown) {
+            const remaining = Math.ceil((cooldown - (now - parseInt(lastReset))) / (1000 * 60 * 60 * 24));
+            this.showNotification(`Cooldown active.Try again in ${remaining} days.`, 'error');
+            return;
+        }
+
+        if (confirm("Are you sure you want to reset your HWID? This can only be done once every 7 days.")) {
+            // In a real app, this would call Supabase to clear the HWID column
+            // For this simulation, we clear local storage and set the timestamp
+
+            localStorage.removeItem('device_hwid');
+            localStorage.setItem('last_hwid_reset', now.toString());
+
+            this.showNotification('HWID Reset Successful! Please re-authenticate.', 'success');
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
         }
     }
 
@@ -2348,7 +2294,7 @@ class UserPortal {
 
     renderSupportContent() {
         return `
-            <h2 style="margin-bottom: 20px;">Support</h2>
+                    < h2 style = "margin-bottom: 20px;" > Support</h2 >
             <div class="support-widget">
                 <i class="fab fa-discord" style="font-size: 48px; margin-bottom: 15px;"></i>
                 <h3>Need Help?</h3>
@@ -2366,7 +2312,7 @@ class UserPortal {
                     <button class="btn-primary" style="width: auto;" onclick="window.userPortal.askAI()">Ask</button>
                 </div>
             </div>
-        `;
+                `;
     }
 
     askAI() {
@@ -2375,7 +2321,7 @@ class UserPortal {
         if (!question) return;
 
         const chatBox = document.getElementById('aiChatBox');
-        chatBox.innerHTML += `<div style="margin-top: 10px; text-align: right; color: var(--text-primary);">You: ${question}</div>`;
+        chatBox.innerHTML += `< div style = "margin-top: 10px; text-align: right; color: var(--text-primary);" > You: ${question}</div > `;
         input.value = '';
 
         // Simulate AI Response
@@ -2385,7 +2331,7 @@ class UserPortal {
             if (question.toLowerCase().includes('script')) answer = "You can find scripts in the 'My Scripts' tab or generate one in 'Script Gen'.";
             if (question.toLowerCase().includes('hello')) answer = "Hello! I am the Quantum AI Assistant.";
 
-            chatBox.innerHTML += `<div style="margin-top: 10px; color: var(--accent-color);">Quantum AI: ${answer}</div>`;
+            chatBox.innerHTML += `< div style = "margin-top: 10px; color: var(--accent-color);" > Quantum AI: ${answer}</div > `;
             chatBox.scrollTop = chatBox.scrollHeight;
         }, 1000);
     }
@@ -2415,40 +2361,22 @@ class UserPortal {
 
         let script = `-- Generated by Quantum Portal\n\n`;
         script += `local plr = game.Players.LocalPlayer\n`;
-        script += `local char = plr.Character or plr.CharacterAdded:Wait()\n\n`;
+        script += `local char = plr.Character or plr.CharacterAdded: Wait() \n\n`;
 
-        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws}\n`;
-        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp}\n`;
+        if (ws != 16) script += `char.Humanoid.WalkSpeed = ${ws} \n`;
+        if (jp != 50) script += `char.Humanoid.JumpPower = ${jp} \n`;
 
         if (infJump) {
-            script += `\n-- Infinite Jump\ngame:GetService("UserInputService").JumpRequest:Connect(function()\n    char.Humanoid:ChangeState("Jumping")\nend)\n`;
+            script += `\n-- Infinite Jump\ngame: GetService("UserInputService").JumpRequest: Connect(function () \n    char.Humanoid: ChangeState("Jumping") \nend) \n`;
         }
 
         if (esp) {
-            script += `\n-- Simple ESP\nfor _,p in pairs(game.Players:GetPlayers()) do\n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character)\n        h.FillColor = Color3.new(1,0,0)\n    end\nend\n`;
+            script += `\n-- Simple ESP\nfor _, p in pairs(game.Players: GetPlayers()) do \n    if p ~= plr and p.Character then\n        local h = Instance.new("Highlight", p.Character) \n        h.FillColor = Color3.new(1, 0, 0) \n    end\nend\n`;
         }
 
         if (aimbot) {
-            script += `\n-- Simple Aimbot (Camera)\nlocal cam = workspace.CurrentCamera\ngame:GetService("RunService").RenderStepped:Connect(function()\n    local target = nil\n    local dist = math.huge\n    for _,p in pairs(game.Players:GetPlayers()) do\n        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend)\n`;
+            script += `\n-- Simple Aimbot(Camera) \nlocal cam = workspace.CurrentCamera\ngame: GetService("RunService").RenderStepped: Connect(function () \n    local target = nil\n    local dist = math.huge\n    for _, p in pairs(game.Players: GetPlayers()) do \n        if p ~= plr and p.Character and p.Character: FindFirstChild("Head") then\n            local d = (p.Character.Head.Position - char.Head.Position).Magnitude\n            if d < dist then target = p.Character.Head; dist = d end\n        end\n    end\n    if target then cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position) end\nend) \n`;
         }
-
-        document.getElementById('genOutput').value = script;
-        this.showNotification('Script Generated!', 'success');
-    }
-
-    copyGeneratedScript() {
-        const output = document.getElementById('genOutput');
-        if (!output.value) return;
-        navigator.clipboard.writeText(output.value).then(() => {
-            this.showNotification('Copied to clipboard!', 'success');
-        });
-    }
-
-    initBackground() {
-        // Create Canvas
-        const canvas = document.createElement('canvas');
-        canvas.id = 'bgCanvas';
-        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;';
         document.body.appendChild(canvas);
 
         const ctx = canvas.getContext('2d');
@@ -2549,7 +2477,7 @@ class UserPortal {
 
     viewScript(index) {
         const script = this.scripts[index];
-        alert(`Script: ${script.name}\n\n${script.content}`);
+        alert(`Script: ${script.name} \n\n${script.content} `);
     }
 
     copyScript(index) {
@@ -2560,7 +2488,7 @@ class UserPortal {
     }
 
     copyLoaderScript() {
-        const loader = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
+        const loader = `loadstring(game: HttpGet("https://raw.githubusercontent.com/sigmalamineee-debug/quantum-portal/main/loader.lua"))()`;
         navigator.clipboard.writeText(loader).then(() => {
             this.showNotification('Loader copied to clipboard!', 'success');
         });
@@ -2571,7 +2499,7 @@ class UserPortal {
         this.showNotification(`Executing: ${script.name}...`, 'info');
         // Simulate WebSocket execution
         setTimeout(() => {
-            this.showNotification(`Successfully executed ${script.name} in-game!`, 'success');
+            this.showNotification(`Successfully executed ${script.name} in -game!`, 'success');
         }, 1000);
     }
 
@@ -2588,8 +2516,8 @@ class UserPortal {
 
         const notif = document.createElement('div');
         notif.className = 'notification';
-        notif.style.borderLeft = `4px solid ${colors[type]}`;
-        notif.innerHTML = `<i class="fas ${icons[type]}" style="color: ${colors[type]}"></i> ${message}`;
+        notif.style.borderLeft = `4px solid ${colors[type]} `;
+        notif.innerHTML = `< i class="fas ${icons[type]}" style = "color: ${colors[type]}" ></i > ${message} `;
 
         document.body.appendChild(notif);
 
