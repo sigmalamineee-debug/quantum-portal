@@ -602,26 +602,24 @@ class UserPortal {
             <div class="login-container">
                 <div class="glass-card">
                     <div class="brand-header">
-                        <div class="brand-logo" style="width: 60px; height: 60px; margin: 0 auto 15px auto;">
-                            <img src="logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                        <div class="brand-logo" style="width: 80px; height: 80px; margin: 0 auto 15px auto; background: none; border: none; box-shadow: none;">
+                            <img src="logo_christmas.png" alt="Quantum Logo" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));">
                         </div>
-                        <h1 class="brand-title">Quantum Portal</h1>
-                        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 5px;">Enter your access key to continue</p>
+                        <h1 class="brand-title" style="font-size: 24px; margin-bottom: 5px;">Quantum Portal</h1>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 0;">Enter your access key to continue</p>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="keyInput" class="modern-input" placeholder="QTM_API_..." autocomplete="off">
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <input type="text" id="keyInput" class="modern-input" placeholder="QTM_API_..." autocomplete="off" style="text-align: center; font-family: monospace; letter-spacing: 1px;">
                     </div>
-                    <button id="loginBtn" class="btn-primary" style="margin-bottom: 15px;">
+                    <button id="loginBtn" class="btn-primary" style="margin-bottom: 15px; width: 100%; justify-content: center; font-weight: 600;">
                         Access Dashboard <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
                     </button>
-                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px; margin-bottom: 10px;" onclick="window.userPortal.copyDeviceHwid()">
-                        <i class="fas fa-fingerprint"></i> Copy HWID
+                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px; width: 100%; justify-content: center; margin-bottom: 15px;" onclick="window.userPortal.copyDeviceHwid()">
+                        <i class="fas fa-fingerprint" style="margin-right: 8px;"></i> Copy HWID
                     </button>
-                    <button class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); font-size: 14px; padding: 10px;" onclick="window.userPortal.previewUI()">
-                        <i class="fas fa-eye"></i> Preview UI
-                    </button>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="https://discord.gg/KjuYafU7UB" target="_blank" style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Don't have a key? Purchase here</a>
+                    
+                    <div style="text-align: center; margin-top: 10px;">
+                        <a href="https://discord.gg/quantum_ui" target="_blank" style="color: var(--text-secondary); font-size: 12px; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--text-secondary)'">Don't have a key? Purchase here</a>
                     </div>
                 </div>
             </div>
