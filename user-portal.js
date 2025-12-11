@@ -1952,8 +1952,18 @@ class UserPortal {
 
         const output = document.getElementById('genOutput');
         output.value = script;
+    }
 
-        // Add typing animation effect
+    copyGeneratedScript() {
+        const output = document.getElementById('genOutput');
+        if (!output || !output.value) return;
+
+        navigator.clipboard.writeText(output.value).then(() => {
+            this.showNotification('Script copied to clipboard!', 'success');
+        });
+    }
+
+    redeemCode(code) {
         if (!code) return;
 
         // Rank Codes

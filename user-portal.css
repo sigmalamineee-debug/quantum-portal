@@ -1424,57 +1424,45 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
 
-height: 32px;
-margin: 0 !important;
-font-size: 16px;
-}
+    .user-profile {
+        display: none;
+        /* Hide profile in sidebar on mobile */
+    }
 
-.brand-title {
-    font-size: 18px;
-    margin-bottom: 0;
-}
+    .pricing-container {
+        padding: 10px;
+    }
 
-.user-profile {
-    display: none;
-    /* Hide profile in sidebar on mobile */
-}
+    /* Adjust specific components for mobile */
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 
-.pricing-container {
-    padding: 10px;
-}
+    .dashboard-header .user-profile {
+        display: flex;
+        /* Show profile in dashboard header if needed, or keep hidden */
+        width: 100%;
+        justify-content: space-between;
+    }
 
-/* Adjust specific components for mobile */
-.dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-}
+    .stat-card {
+        padding: 15px;
+    }
 
-.dashboard-header .user-profile {
-    display: flex;
-    /* Show profile in dashboard header if needed, or keep hidden */
-    width: 100%;
-    justify-content: space-between;
-}
+    .script-header {
+        flex-direction: column;
+        gap: 10px;
+    }
 
-.stat-card {
-    padding: 15px;
-}
+    .script-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 
-.script-header {
-    flex-direction: column;
-    gap: 10px;
-}
 
-.script-actions {
-    width: 100%;
-    justify-content: flex-end;
-}
 }
 
 :root {
